@@ -1,0 +1,230 @@
+# HPLDN guard rails: every rate limit, ban rule and bot check in one place.
+#
+# Installed as /etc/hpldn/guard.yaml (0644) by bootstrap.sh on every run, so
+# edit this copy in the repo and deploy. Host-only changes go in
+# /etc/hpldn/guard.local.yaml, which is deep-merged on top of this file and
+# never overwritten; for example, to dry-run the Cloudflare sink:
+#
+#     cloudflare:
+#       dry_run: true
+#
+# Read by:
+#   * the API (hpldn.backend.guard.config): rate_limits.app and captcha;
+#   * render_guard_nginx.py at bootstrap: rate_limits.nginx and user_agents;
+#   * the hpldn-guard daemon: bans, crawlers and cloudflare.
+# The API and the daemon read it at start, so restart them after a change;
+# `bootstrap.sh --configs-only` re-renders nginx's includes and reloads it.
+# Durations are a number of seconds or a number with s, m, h or d.
+
+rate_limits:
+  # Per client and per gunicorn worker (api/ratelimit.py). nginx's shared
+  # zones below are the precise limit; these bound the damage without nginx
+  # (the dev proxy, a tunnel). Each: a token bucket of `burst` refilled at
+  # `rate_per_s`, answered 429 with Retry-After, and at most `max_concurrent`
+  # requests of one client inside the route at once.
+  app:
+    # Sized for typing: a steady search a second (the client sends at most
+    # one every 400 ms, and only once the last answer is back), 15 at once
+    # for a fast burst, and 2 in flight -- the client keeps one, the second
+    # covers a request still finishing server-side.
+    search: {rate_per_s: 1.0, burst: 15, max_concurrent: 2}
+    # A landlord prices one home at a time: a burst of 6 covers changing the
+    # date a few times, then one every 2 s; 2 in flight as for search.
+    price: {rate_per_s: 0.5, burst: 6, max_concurrent: 2}
+    # The estimate and a postcode's address list are one request per form
+    # submit; the detailed analysis sends /nearby and /schools together. 4 in
+    # flight covers that pair plus a cancelled pair the server is still
+    # finishing (a re-render, or React's StrictMode running the effect twice
+    # in development).
+    form: {rate_per_s: 0.5, burst: 10, max_concurrent: 4}
+    # POST /session: one reCAPTCHA check per visit (a pass lasts
+    # captcha.pass_ttl), plus a few retries.
+    session: {rate_per_s: 0.1, burst: 5, max_concurrent: 2}
+    # The open routes every page load and the detailed analysis call:
+    # /areas, /areas/<district>, /inflation and /session/config (a page load
+    # is two of them). 10 at once, then one every 5 s, per worker: looser than
+    # nginx's page zone, which is the precise limit, but it still answers a
+    # page reloaded in a loop 429 without nginx (and the 429s, through
+    # bans.rules.throttled, earn a ban).
+    read: {rate_per_s: 0.2, burst: 10, max_concurrent: 4}
+    # Model pricing in flight across every client on one worker, answered
+    # 503. `auto` is one per core, at least 2.
+    price_cap: auto
+
+  nginx:
+    # limit_req zones, keyed on the real client address (CF-Connecting-IP).
+    # Verified crawlers are keyed on the crawler zone only, and everyone else
+    # on the others only, so a crawler never spends a visitor's budget.
+    #
+    # A page load is the page (/), favicon and manifest (site), 3-6 bundle
+    # files (static), then /api/areas and /api/session/config (page). A
+    # visitor reloads a few times a minute at most: the page zone allows 6
+    # reloads at once and then 10 a minute, so 30 reloads a minute is
+    # answered 429 within seconds, and 20 of those 429s in a minute are a
+    # ban (bans.rules.throttled).
+    zones:
+      # The calls of a priced home: price, addresses, nearby, schools, inflation.
+      api: {rate: 30r/m, size: 10m}
+      # The calls every page load makes: /api/areas and /api/session/config.
+      page: {rate: 20r/m, size: 10m}
+      # Address search, as a person types: a request per pause of 300 ms,
+      # so a long address is 15-20 in a few seconds. A burst of 20, then one
+      # a second, as the API's own search limiter; at 20r/m with a burst of
+      # 10, typing and a retry or two earned 429s, and 20 of those a ban.
+      search: {rate: 60r/m, size: 10m}
+      session: {rate: 10r/m, size: 10m}
+      # The page itself and the files at the top level (favicon, manifest).
+      site: {rate: 60r/m, size: 10m}
+      # The hashed bundle; Cloudflare and the browser cache most of it.
+      static: {rate: 5r/s, size: 10m}
+      crawler: {rate: 5r/s, size: 10m, burst: 20}
+    # One limits/<name>.conf per location of nginx/hpldn.conf. `location` is
+    # the location's own match, kept here so tests can check the two agree;
+    # `search_conn: true` adds the per-client cap on open searches.
+    routes:
+      areas: {location: "= /api/areas", zone: page, burst: 12}
+      area: {location: "~ ^/api/areas/[A-Za-z0-9]+(/comparables)?$", zone: api, burst: 15}
+      estimate: {location: "= /api/estimate", zone: api, burst: 15}
+      address_search: {location: "= /api/addresses/search", zone: search, burst: 20, search_conn: true}
+      addresses: {location: "= /api/addresses", zone: api, burst: 15}
+      price: {location: "= /api/price", zone: api, burst: 15}
+      nearby: {location: "= /api/nearby", zone: api, burst: 15}
+      schools: {location: "= /api/schools", zone: api, burst: 15}
+      inflation: {location: "= /api/inflation", zone: api, burst: 15}
+      session: {location: "= /api/session", zone: session, burst: 5}
+      session_config: {location: "= /api/session/config", zone: page, burst: 12}
+      site: {location: "/", zone: site, burst: 30}
+      index: {location: "= /index.html", zone: site, burst: 30}
+      static: {location: "/static/", zone: static, burst: 60}
+    # All requests of one client open at once, across the site.
+    conn_per_client: 20
+    # Address searches of one client open at once (the page keeps one).
+    search_conn_per_client: 4
+    # Slow clients are cut off: a request's headers and body must arrive, and
+    # a response be read, within these; an idle keep-alive is closed after
+    # `keepalive`.
+    timeouts:
+      client_header: 10s
+      client_body: 10s
+      send: 10s
+      keepalive: 30s
+
+bans:
+  # Each rule fired is a strike against the client's address (an IPv6
+  # client's /64); strikes earn escalating bans (durations below), ending in
+  # a permanent blacklist. nginx answers a banned address 403 at once, and
+  # Cloudflare blocks it at the edge.
+  rules:
+    # Keeps hitting the rate limits instead of backing off: 20 answers of 429
+    # (nginx's own or the API's) in a minute.
+    throttled: {count: 20, window: 60s, status: 429}
+    # More requests than any page or person makes (a page load is ~10).
+    flood: {count: 300, window: 60s}
+    # Keeps sending while banned: every 60 requests in a minute that nginx
+    # answers 403 move the ban on to the next step at once, so a client that
+    # ignores its ban reaches the blacklist within minutes. Behind Cloudflare
+    # the edge blocks a synced ban, so this mostly fires before the sync.
+    evading: {count: 60, window: 60s, while_banned: true}
+    # Keeps calling captcha-gated routes without a pass.
+    no_pass: {count: 40, window: 300s, reject: captcha}
+    # Probing for software this site does not run; banned for a day at once.
+    scanner:
+      count: 5
+      window: 10m
+      paths:
+        - 'wp-'
+        - '\.env'
+        - '\.git'
+        - 'phpmyadmin'
+        - 'xmlrpc'
+        - '\.php$'
+        - 'cgi-bin'
+      min_level: 2
+  # The ban for the first, second, ... strike within `strike_memory`; the
+  # fifth is the blacklist: permanent, lifted only by `hpldn-guard unban`.
+  durations: [10m, 1h, 24h, 7d, permanent]
+  strike_memory: 30d
+  # IPv6 clients are banned per /64: one host has the whole prefix.
+  ipv6_prefix: 64
+  # The most bans held at once; past it the one expiring soonest is lifted.
+  max_bans: 5000
+  # Never banned: monitoring and office addresses (CIDRs).
+  allowlist_cidrs: []
+
+crawlers:
+  # Published ranges of the search crawlers that must never be banned or
+  # captcha'd. Fetched daily; a failed download keeps the cached ranges.
+  # Bing's bingbot.json answers 404 from outside Microsoft, so Bingbot is
+  # recognised by its reverse DNS (search.msn.com) below.
+  range_urls:
+    - https://developers.google.com/static/crawling/ipranges/common-crawlers.json
+    - https://developers.google.com/static/crawling/ipranges/special-crawlers.json
+    - https://developers.google.com/static/crawling/ipranges/user-triggered-fetchers.json
+    - https://developers.google.com/static/crawling/ipranges/user-triggered-fetchers-google.json
+    - https://www.bing.com/toolkit/bingbot.json
+  # A client claiming to be Googlebot or Bingbot from outside the ranges is
+  # believed when its reverse DNS ends in one of these and resolves back to it.
+  rdns_suffixes:
+    - googlebot.com
+    - google.com
+    - googleusercontent.com
+    - search.msn.com
+  # User agents that claim to be one of the crawlers above.
+  user_agent_pattern: '(?i)googlebot|bingbot|google-inspectiontool|googleother|adsbot-google|mediapartners-google|storebot-google|feedfetcher-google'
+  refresh_interval: 24h
+
+captcha:
+  # Google reCAPTCHA v3 (invisible). Keys: bootstrap.sh --set-recaptcha-keys.
+  # HPLDN_CAPTCHA_DISABLED=1 in the API's environment turns this off for
+  # local and end-to-end runs.
+  enabled: true
+  # v3 scores 0.0 (a bot) to 1.0 (a person); below this the pass is refused.
+  min_score: 0.3
+  action: session
+  # The hostnames reCAPTCHA may report the token was made on.
+  allowed_hostnames: []
+  # How long a pass lasts; the page asks for a new one a minute before.
+  pass_ttl: 30m
+  # If Google cannot be reached, hand out a short pass instead of refusing,
+  # so an outage there cannot take this site down.
+  fail_open: true
+  fail_open_ttl: 5m
+  # The routes that need a pass (API paths, without /api). /areas and
+  # /inflation stay open: the home page and crawlers need them. So does
+  # /addresses/search: a first search must not wait for reCAPTCHA (Google's
+  # script, execute, POST /session took ~20 s on a phone), and it is held by
+  # its own limits instead -- nginx's search zone and connection cap
+  # (rate_limits.nginx.routes.address_search), the API's read limiter, the
+  # guard's bans and Cloudflare's /api/ rate rule. Its suggestions name homes,
+  # not prices; pricing one still needs the pass.
+  gated_routes:
+    - /addresses
+    - /price
+    - /estimate
+    - /nearby
+    - /schools
+
+user_agents:
+  # Answered 403 on /api by nginx. Case-insensitive substrings; "" is the
+  # empty user agent. Verified crawlers are never matched.
+  deny_on_api:
+    - ""
+    - sqlmap
+    - nikto
+    - masscan
+    - zgrab
+    - python-requests
+    - curl
+    - Go-http-client
+    - scrapy
+
+cloudflare:
+  # Mirrors the bans into a Cloudflare IP list, blocked at the edge by a WAF
+  # custom rule (README.md). The token (Account Rule Lists: Write) is
+  # CLOUDFLARE_API_TOKEN in /etc/hpldn/guard.env, never here.
+  enabled: false
+  account_id: ""
+  list_name: hpldn_banned
+  sync_debounce: 15s
+  # Log the list updates instead of sending them.
+  dry_run: false

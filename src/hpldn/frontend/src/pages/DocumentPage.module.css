@@ -1,0 +1,74 @@
+.page {
+  padding-block: calc(var(--header-h) + var(--sp-8)) var(--section-pad-y);
+}
+
+.inner {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding-inline: var(--gutter);
+}
+
+.back {
+  display: inline-block;
+  margin-bottom: var(--sp-6);
+  font-size: var(--fs-small);
+  color: var(--c-ink-3);
+}
+
+.back:hover {
+  color: var(--c-accent);
+}
+
+.head {
+  max-width: var(--reading-max);
+  margin-bottom: var(--sp-8);
+}
+
+.eyebrow {
+  display: block;
+  font-size: var(--fs-label);
+  font-weight: 500;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--c-ink-3);
+  margin-bottom: var(--sp-4);
+}
+
+.heading {
+  font-size: var(--fs-display-s);
+}
+
+.lead {
+  margin-top: var(--sp-4);
+  font-size: var(--fs-lead);
+  line-height: 1.5;
+  color: var(--c-ink-3);
+  text-wrap: pretty;
+}
+
+.related {
+  max-width: var(--reading-max);
+  margin-top: var(--sp-9);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--c-hairline);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3) var(--sp-6);
+  font-size: var(--fs-small);
+}
+
+.relatedLink {
+  color: var(--c-accent-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.relatedLink:hover {
+  color: var(--c-accent);
+}
+
+@media (max-width: 900px) {
+  .page {
+    padding-block: calc(var(--header-h) + var(--sp-6)) var(--sp-9);
+  }
+}

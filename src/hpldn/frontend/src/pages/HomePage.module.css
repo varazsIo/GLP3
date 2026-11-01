@@ -1,0 +1,11 @@
+/* The result slot under the hero: a price card or a details estimate, whichever came last. */
+.result {
+  padding-block: var(--sp-8) var(--sp-9);
+  scroll-margin-top: var(--header-h);
+}
+
+.resultInner {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding-inline: var(--gutter);
+}

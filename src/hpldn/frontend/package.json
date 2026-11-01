@@ -1,0 +1,63 @@
+{
+  "name": "frontend",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^13.5.0",
+    "@types/jest": "^27.5.2",
+    "@types/node": "^16.18.126",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "date-fns": "^4.4.0",
+    "react": "^19.3.0",
+    "react-day-picker": "^9.14.0",
+    "react-dom": "^19.3.0",
+    "typescript": "^4.9.5",
+    "web-vitals": "^2.1.4"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "build:prod": "GENERATE_SOURCEMAP=false react-scripts build && node scripts/strip-build.mjs",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
+    "e2e:static": "playwright test -c playwright.static.config.ts"
+  },
+  "jest": {
+    "moduleNameMapper": {
+      "^date-fns$": "<rootDir>/node_modules/date-fns/index.cjs",
+      "^date-fns/locale$": "<rootDir>/node_modules/date-fns/locale.cjs",
+      "^date-fns/locale/(.*)$": "<rootDir>/node_modules/date-fns/locale/$1.cjs",
+      "^react-day-picker/style\\.css$": "<rootDir>/node_modules/react-day-picker/src/style.css"
+    }
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "ajv8": "npm:ajv@^8.20.0",
+    "http-proxy-middleware": "^2.0.10",
+    "react-scripts": "5.0.1"
+  }
+}

@@ -1,0 +1,95 @@
+# =====================================================================
+# HPLDN configuration — TEMPLATE.
+#
+# Copy to configuration/staging.yaml (gitignored, for local values) and edit:
+#
+#     mkdir -p configuration
+#     cp src/hpldn/backend/config/staging.example.yaml configuration/staging.yaml
+#
+# Or point HPLDN_CONFIG_FP at a copy elsewhere. Every path below is
+# interpolated from the environment, so most hosts need no edits beyond
+# HPLDN_DIR_FP and HPLDN_DATA_DIR in develop.env.
+#
+# PATHS ARE INTERPOLATED. `${VAR}` and `${VAR:-default}` are expanded by
+# hpldn.backend.common.config.get_cfg against the process environment.
+# Migration input paths are not here: they are in
+# src/hpldn/backend/migrations/inputs.yaml, relative to HPLDN_DATA_DIR
+# (default <repo>/data). See the `data:` block at the end.
+# =====================================================================
+
+# chunking params
+csv_chunk_size: "1G"
+csv_chunk_lines: 1000000
+chunk_size: 1000 # chunk size in rows
+max_csv_rows: 10000
+
+# PostgreSQL bulk-load params.
+#
+# These are OVERRIDES, not the defaults: StagingCopy derives every one of them
+# from the host's own vCPU/RAM (hpldn.backend.common.tuning), so leaving this block out
+# entirely is the normal case and gives sizing that follows the machine. Set a
+# key here only to pin it for an experiment — a value that suits a 32GiB
+# host will starve or overcommit anything else.
+# psql:
+#   maintenance_work_mem: "4GB"
+#   autovacuum_enabled: "false"
+#   synchronous_commit: "OFF"
+#   max_wal_size: "20GB"
+#   checkpoint_timeout: "60min"
+
+# Tuning policy — the defaults are hpldn.backend.common.tuning.TuningPolicy. Shapes how the derived settings are
+# calculated rather than setting them directly.
+#
+# memory_fraction 0.90 leaves a tenth of RAM for the OS and the seeding
+# process; concurrent_queries 2 with memory_nodes_per_query 2 sizes work_mem
+# for four simultaneous sort/hash nodes. These are the TuningPolicy defaults.
+tuning:
+  # Share of system RAM PostgreSQL may use in total (the rest covers the OS and
+  # the seeding process itself).
+  memory_fraction: 0.90
+  # How many memory-hungry sessions the cluster-level work_mem is sized for.
+  concurrent_queries: 2
+  # Assumed concurrent sort/hash nodes per query — work_mem is a per-node limit.
+  memory_nodes_per_query: 2
+  # Ceiling on parallel workers for a single Gather node.
+  max_workers_per_gather_cap: 16
+
+# Fan-out for the two parallelised multi-file loads in migration 0003 (the
+# 19 EPC certificate years, ~27 GB, and the 120 Code-Point Open files).
+# Capped so that work_mem x workers stays inside the memory budget --
+# hpldn.backend.common.tuning._half_and_align_mb already does that arithmetic, and
+# tuning.get_copy_jobs derives this value from the host when the key is
+# absent. Set it only to pin an experiment.
+# seed:
+#   max_parallel_copy_jobs: 6
+
+# Size of the volume holding PGDATA. Only used to keep max_wal_size to a sane
+# share of the disk.
+data_volume_size_gb: 100
+
+# Logging config
+log_name: "HPLDN_logger"
+log_level: 10
+log_fp: "${HPLDN_DIR_FP}/tmp/logs/hpldn.log"
+
+# Served price model (api/market/pricing.py): a signed bundle directory
+# (hpldn.backend.models.artifact), served only if it verifies; there is no
+# fallback to another model. HPLDN_PRICE_MODEL_FP overrides it.
+models:
+  catboost_bundle: "${HPLDN_DIR_FP}/tmp/models/model"
+
+# =====================================================================
+# data -- per-host overrides for migration input paths
+#
+# Every input's path lives in src/hpldn/backend/migrations/inputs.yaml,
+# relative to HPLDN_DATA_DIR (default <repo>/data), and resolves through
+# hpldn.backend.migrations.inputs. `python -m hpldn.backend.migrations.inputs
+# check` reports every missing input at once; alembic runs the same check for
+# the pending revisions before the first one starts.
+#
+# To move one input on this host only, map its manifest key to a path here:
+#
+#   data:
+#     ppd_complete_csv_fp: "/mnt/big/pp-complete.csv"
+# =====================================================================
+data: {}

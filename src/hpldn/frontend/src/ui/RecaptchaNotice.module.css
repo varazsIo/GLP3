@@ -1,0 +1,15 @@
+.notice {
+  margin-top: var(--sp-3);
+  font-size: var(--fs-label);
+  color: var(--c-ink-3);
+}
+
+.link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.link:hover {
+  color: var(--c-ink);
+}

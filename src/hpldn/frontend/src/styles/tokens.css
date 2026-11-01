@@ -1,0 +1,172 @@
+/* Design tokens. One source of truth for colour, type, space and motion. */
+
+:root {
+  color-scheme: light dark;
+
+  /* Canvas and ink */
+  --c-canvas: #fafaf8;
+  --c-canvas-sunk: #f2f2ed;
+  --c-surface: #ffffff;
+  --c-ink: #111113;
+  --c-ink-2: #3a3a40;
+  /* Both muted inks meet WCAG AA (4.5:1) on every light surface, down to the accent tint. */
+  --c-ink-3: #5a5a62;
+  --c-ink-4: #6a6a72;
+  --c-hairline: #e4e4dd;
+  --c-hairline-strong: #d2d2c9;
+
+  /* One confident accent, plus a clay reserved for cautions */
+  --c-accent: #0f4c3a;
+  --c-accent-hover: #0b3a2c;
+  --c-accent-soft: #e7efeb;
+  --c-accent-ink: #0b3a2c;
+  --c-clay: #b4552d;
+  --c-clay-soft: #f8ece5;
+  --c-clay-ink: #8d4122;
+
+  /* The dark editorial band, fixed in both themes */
+  --c-ground: #111113;
+  --c-ground-ink: #f4f4f0;
+  --c-ground-ink-2: #a3a39c;
+  --c-ground-hairline: #2c2c31;
+
+  /* Choropleth ramp, cheapest band to dearest, the same in both themes */
+  --c-ramp-1: #1a2420;
+  --c-ramp-2: #1f4234;
+  --c-ramp-3: #2a684f;
+  --c-ramp-4: #3f9171;
+  --c-ramp-5: #6dbd99;
+  --c-ramp-6: #b4e6cd;
+  --c-map-idle: #e8e8e1;
+  --c-map-stroke: #ffffff;
+  --c-map-water: #f4f6f6;
+  --c-river: #a9c3cc;
+
+  /* Type */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --fs-display-xl: 4.5rem;  /* 72 */
+  --fs-display: 3.5rem;     /* 56 */
+  --fs-display-s: 2.5rem;   /* 40 */
+  --fs-title: 1.75rem;      /* 28 */
+  --fs-lead: 1.25rem;       /* 20 */
+  --fs-body: 1rem;          /* 16 */
+  --fs-small: 0.875rem;     /* 14 */
+  --fs-label: 0.8125rem;    /* 13 */
+  --lh-display: 1.04;
+  --lh-title: 1.16;
+  --lh-body: 1.55;
+  --tracking-label: 0.09em;
+  --tracking-display: -0.025em;
+  --weight-head: 600;
+
+  /* Space, 8px base */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.5rem;
+  --sp-6: 2rem;
+  --sp-7: 2.5rem;
+  --sp-8: 3rem;
+  --sp-9: 4rem;
+  --sp-10: 5rem;
+  --sp-11: 7.5rem;
+  --content-max: 1200px;
+  --reading-max: 720px;
+  --section-pad-y: 7.5rem;
+  --gutter: 1.5rem;
+
+  /* Radius and elevation */
+  --r-sm: 8px;
+  --r-md: 14px;
+  --r-lg: 22px;
+  --r-pill: 999px;
+  --shadow-card: 0 24px 60px -28px rgba(17, 17, 19, 0.28),
+    0 2px 6px -2px rgba(17, 17, 19, 0.08);
+
+  /* Motion */
+  --dur-fast: 160ms;
+  --dur: 300ms;
+  --dur-slow: 600ms;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  --header-h: 68px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --c-canvas: #0e0e10;
+    --c-canvas-sunk: #141417;
+    --c-surface: #17171a;
+    --c-ink: #f4f4f0;
+    --c-ink-2: #cfcfc9;
+    --c-ink-3: #ababa6;
+    --c-ink-4: #8e8e8c;
+    --c-hairline: #27272b;
+    --c-hairline-strong: #343439;
+
+    --c-accent: #4fb18c;
+    --c-accent-hover: #6cc4a2;
+    --c-accent-soft: #16241f;
+    --c-accent-ink: #8fd9bc;
+    --c-clay: #e08a5f;
+    --c-clay-soft: #2a1c15;
+    --c-clay-ink: #f0a884;
+
+    --c-ground: #08080a;
+    --c-ground-ink: #f4f4f0;
+    --c-ground-ink-2: #9d9d98;
+    --c-ground-hairline: #232327;
+
+    /* A wide lightness ramp, so neighbouring bands stay apart on the dark map. */
+    --c-ramp-1: #1a2420;
+    --c-ramp-2: #1f4234;
+    --c-ramp-3: #2a684f;
+    --c-ramp-4: #3f9171;
+    --c-ramp-5: #6dbd99;
+    --c-ramp-6: #b4e6cd;
+    --c-map-idle: #1c1c20;
+    --c-map-stroke: #0e0e10;
+    --c-map-water: #121417;
+    --c-river: #34505a;
+
+    --shadow-card: 0 24px 60px -28px rgba(0, 0, 0, 0.8),
+      0 2px 6px -2px rgba(0, 0, 0, 0.5);
+  }
+}
+
+@media (max-width: 900px) {
+  :root {
+    --fs-display-xl: 3.25rem;
+    --fs-display: 2.75rem;
+    --fs-display-s: 2rem;
+    --section-pad-y: 4rem;
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --fs-display-xl: 2.625rem;
+    --fs-display: 2.125rem;
+    --fs-display-s: 1.75rem;
+    --fs-lead: 1.0625rem;
+    --gutter: 1.25rem;
+  }
+}
+
+/* Small phones and watches. */
+@media (max-width: 360px) {
+  :root {
+    --fs-display-xl: 2rem;
+    --fs-display: 1.75rem;
+    --fs-display-s: 1.5rem;
+    --fs-title: 1.375rem;
+    --fs-lead: 1rem;
+    --gutter: 0.75rem;
+    --header-h: 56px;
+    --section-pad-y: 2.5rem;
+    --sp-9: 2.5rem;
+    --sp-8: 2rem;
+  }
+}

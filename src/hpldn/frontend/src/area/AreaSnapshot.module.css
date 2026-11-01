@@ -1,0 +1,90 @@
+/* The area search and the Map | Ranked toggle, above everything they change. */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-6);
+}
+
+.search {
+  flex: 0 1 26rem;
+  min-width: min(100%, 16rem);
+}
+
+/* The map (or ranked list) across the full width, the area's figures beneath it. */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-7);
+}
+
+.viewSide {
+  min-width: 0;
+}
+
+.statsSide {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.areaHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sp-2) var(--sp-3);
+}
+
+.eyebrow {
+  flex-basis: 100%;
+  font-size: var(--fs-label);
+  font-weight: 500;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--c-accent-ink);
+}
+
+.district {
+  font-size: var(--fs-title);
+  font-weight: var(--weight-head);
+  letter-spacing: -0.025em;
+  overflow-wrap: anywhere;
+}
+
+.sales {
+  color: var(--c-ink-3);
+  font-size: var(--fs-small);
+}
+
+.lowData {
+  padding: 1px var(--sp-2);
+  border-radius: var(--r-sm);
+  background: var(--c-clay-soft);
+  font-size: var(--fs-label);
+  color: var(--c-clay-ink);
+  white-space: nowrap;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sp-3);
+}
+
+@media (max-width: 900px) {
+  .tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .tiles {
+    grid-template-columns: 1fr;
+  }
+
+  .search {
+    flex-basis: 100%;
+  }
+}

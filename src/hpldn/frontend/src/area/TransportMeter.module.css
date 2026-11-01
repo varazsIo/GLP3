@@ -1,0 +1,27 @@
+.wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.dots {
+  display: flex;
+  gap: 4px;
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--c-hairline-strong);
+}
+
+.on {
+  background: var(--c-accent);
+}
+
+.text {
+  font-size: var(--fs-small);
+  color: var(--c-ink-3);
+  white-space: nowrap;
+}

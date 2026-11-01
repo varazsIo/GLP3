@@ -1,0 +1,76 @@
+/*
+ * Fixed tracks, the same in every row, so the columns line up down the list
+ * whatever a cell holds. A long street name wraps inside its track rather
+ * than being cut, because touch screens never show a title.
+ */
+.row {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.5fr) minmax(0, 1.3fr) minmax(0, 1fr) 6.5rem 6rem;
+  gap: var(--sp-4);
+  align-items: center;
+  padding-block: var(--sp-3);
+  border-top: 1px solid var(--c-hairline);
+  font-size: var(--fs-small);
+}
+
+.row > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.street {
+  font-weight: 500;
+  color: var(--c-ink);
+}
+
+.meta {
+  color: var(--c-ink-3);
+}
+
+.price {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.distance {
+  color: var(--c-ink-3);
+  text-align: right;
+}
+
+@media (max-width: 760px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: var(--sp-1);
+  }
+
+  .street {
+    grid-column: 1;
+  }
+
+  .price {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .meta {
+    grid-column: 1 / -1;
+  }
+
+  .distance {
+    grid-column: 1 / -1;
+    text-align: left;
+  }
+}
+
+/* What the sale is worth at the requested size on the valuation date, under
+   the price paid. Quieter than the price so the record of what changed hands
+   stays the primary figure. */
+.adjusted {
+  display: block;
+  margin-top: 2px;
+  font-weight: 400;
+  font-size: 0.75rem;
+  color: var(--c-ink-3);
+}

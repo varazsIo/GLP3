@@ -1,0 +1,137 @@
+# The tests that need no server: everything a free GitHub-hosted runner can
+# prove without the build database (hpdbldn), the signed model bundle, the
+# Tier A migration inputs (OCI Object Storage), a CUDA GPU or the local
+# stack Playwright drives. No secret and no OCI credential is used.
+#
+#   backend   pytest -m "not hpdbldn and not gpu and not tier_a": the hermetic
+#             tests and the ephemeral PostgreSQL 18 cluster tests (tests/_pg.py),
+#             then the hosted coverage floors (check_coverage.py --hosted)
+#   frontend  Jest, and Playwright's e2e/coverage.spec.ts (no stack, no browser)
+#   tofu      tofu test with mock providers, for every OpenTofu module
+#
+# The same run on a workstation: scripts/ci/run_all.sh hosted jest e2e_static tofu
+# (src/hpldn/backend/tests/README.md, "GitHub CI").
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (pytest)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      # api/__init__.py defaults DB_SCHEMA to production at import, which
+      # would bind the ORM tables there before migration 0001 runs.
+      DB_SCHEMA: staging
+      # The runner ships PostgreSQL 16, which pg_config would find first.
+      HPLDN_PG_BINDIR: /usr/lib/postgresql/18/bin
+      # Keep run_all.sh's `uv run` off the environment set up below.
+      UV_NO_SYNC: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.12.7"
+          python-version: "3.14"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Install PostgreSQL 18 and PostGIS 3 (PGDG)
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q postgresql-common
+          # The tests initdb their own cluster; no packaged one is wanted.
+          echo 'create_main_cluster = false' | sudo tee -a /etc/postgresql-common/createcluster.conf >/dev/null
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y -q postgresql-18 postgresql-18-postgis-3
+          "$HPLDN_PG_BINDIR/initdb" --version
+
+      - name: Install the locked dependencies and hpldn (editable)
+        run: |
+          uv sync --frozen --extra dev --extra api
+          # pyproject.toml has no [build-system], so uv sync leaves the
+          # project itself out; the README installs it editable.
+          uv pip install --no-deps -e .
+
+      - name: Unpack nginx for the local stack render check
+        run: bash src/hpldn/backend/cloud/local/fetch_nginx.sh tmp/local-stack/nginx-bin
+
+      - name: Placeholder develop.env
+        run: cp scripts/ci/develop.ci.env develop.env
+
+      - name: pytest (hosted selection) and coverage floors
+        run: scripts/ci/run_all.sh hosted
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: coverage
+          path: tmp/ci/coverage.json
+          if-no-files-found: ignore
+
+  frontend:
+    name: Frontend (Jest, Playwright coverage)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: src/hpldn/frontend/package-lock.json
+
+      - name: npm ci
+        working-directory: src/hpldn/frontend
+        run: npm ci --no-audit --no-fund
+
+      - name: Jest and Playwright e2e/coverage.spec.ts
+        run: scripts/ci/run_all.sh jest e2e_static
+
+  tofu:
+    name: OpenTofu (tofu test, mock providers)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      TF_PLUGIN_CACHE_DIR: ${{ github.workspace }}/.tofu-plugin-cache
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install the pinned OpenTofu (cosign-verified)
+        # bash, not the file's own mode: a checkout without the executable
+        # bit (core.fileMode, a Windows clone) must not fail with exit 126.
+        run: |
+          bash scripts/install_tofu.sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .tofu-plugin-cache
+          key: tofu-providers-${{ hashFiles('src/hpldn/backend/cloud/**/.terraform.lock.hcl') }}
+
+      - name: tofu test
+        run: |
+          mkdir -p "$TF_PLUGIN_CACHE_DIR"
+          scripts/ci/run_all.sh tofu

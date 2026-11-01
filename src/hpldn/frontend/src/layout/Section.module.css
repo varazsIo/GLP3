@@ -1,0 +1,77 @@
+.section {
+  padding-block: var(--section-pad-y);
+  scroll-margin-top: var(--header-h);
+}
+
+.sunk {
+  background: var(--c-canvas-sunk);
+}
+
+.dark {
+  background: var(--c-ground);
+  color: var(--c-ground-ink);
+}
+
+.inner {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding-inline: var(--gutter);
+  container-type: inline-size;
+}
+
+.head {
+  max-width: var(--reading-max);
+  margin-bottom: var(--sp-8);
+}
+
+.eyebrow {
+  display: block;
+  font-size: var(--fs-label);
+  font-weight: 500;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--c-ink-3);
+  margin-bottom: var(--sp-4);
+}
+
+.dark .eyebrow {
+  color: var(--c-ground-ink-2);
+}
+
+.heading {
+  font-size: var(--fs-display-s);
+  margin: 0;
+  overflow-wrap: break-word;
+}
+
+/* Focused by script ("See the area" moves here), never by Tab. */
+.heading:focus {
+  outline: none;
+}
+
+.lead {
+  margin-top: var(--sp-4);
+  font-size: var(--fs-lead);
+  line-height: 1.5;
+  color: var(--c-ink-3);
+  text-wrap: pretty;
+}
+
+/*
+ * A lead meant for one line: full width, and type that scales with it down to
+ * a readable floor, below which it wraps. Browsers without container units
+ * keep the plain lead size.
+ */
+.headWide {
+  max-width: none;
+}
+
+@supports (font-size: 1cqi) {
+  .leadOneLine {
+    font-size: clamp(0.9375rem, 2.35cqi, var(--fs-lead));
+  }
+}
+
+.dark .lead {
+  color: var(--c-ground-ink-2);
+}

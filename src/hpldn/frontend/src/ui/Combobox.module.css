@@ -1,0 +1,105 @@
+/* The input and its list; the list hangs below the input, over what follows. */
+.wrap {
+  position: relative;
+  min-width: 0;
+}
+
+.popup {
+  position: absolute;
+  inset: calc(100% + 8px) 0 auto 0;
+  z-index: 30;
+  overflow: hidden;
+  background: var(--c-surface);
+  border: 1px solid var(--c-hairline-strong);
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow-card);
+  color: var(--c-ink);
+  text-align: left;
+}
+
+.messageRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2) var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+}
+
+.message {
+  font-size: var(--fs-small);
+  color: var(--c-ink-3);
+}
+
+/* A comfortable touch target: the price form is used on phones first. */
+.retry {
+  min-height: 44px;
+}
+
+/* The settled message or result count, for screen readers only. */
+.announcer {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/*
+ * About five suggestions tall, so the list covers as little of the page below
+ * as it can, with a slim scrollbar in the page's own colours.
+ */
+.listbox {
+  max-height: min(19rem, 50vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-block: var(--sp-1);
+  scrollbar-width: thin;
+  scrollbar-color: var(--c-hairline-strong) transparent;
+}
+
+.listbox::-webkit-scrollbar {
+  width: 8px;
+}
+
+.listbox::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.listbox::-webkit-scrollbar-thumb {
+  border: 2px solid var(--c-surface);
+  border-radius: var(--r-pill);
+  background: var(--c-hairline-strong);
+}
+
+.listbox::-webkit-scrollbar-thumb:hover {
+  background: var(--c-ink-4);
+}
+
+/* A hairline between suggestions, so each address reads as its own row. */
+.option + .option {
+  border-top: 1px solid var(--c-hairline);
+}
+
+.option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 44px;
+  justify-content: center;
+  padding: var(--sp-2) var(--sp-4);
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.active {
+  background: var(--c-accent-soft);
+}
+
+.chosen {
+  box-shadow: inset 3px 0 0 var(--c-accent);
+}

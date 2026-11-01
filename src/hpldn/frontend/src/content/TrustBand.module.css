@@ -1,0 +1,40 @@
+.strip {
+  padding-block: var(--sp-6);
+  border-block: 1px solid var(--c-hairline);
+  background: var(--c-canvas);
+  scroll-margin-top: var(--header-h);
+}
+
+.inner {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding-inline: var(--gutter);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3) var(--sp-6);
+}
+
+.statement {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: var(--lh-body);
+  text-wrap: pretty;
+}
+
+/* An inline list, the items separated by a middle dot. */
+.sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1) 0;
+  font-size: var(--fs-small);
+  color: var(--c-ink-3);
+}
+
+.source:not(:last-child)::after {
+  content: '·';
+  padding-inline: var(--sp-2);
+  color: var(--c-ink-4);
+}

@@ -1,0 +1,114 @@
+# HPLDN read API (gunicorn + uvicorn workers) on the single serving host.
+# Installed as /etc/systemd/system/hpldn-api.service by bootstrap.sh.
+# Listens only on hpldn-api.socket (/run/hpldn-api/api.sock), handed over by
+# socket activation; see README.md.
+[Unit]
+Description=HPLDN read API (gunicorn + uvicorn workers)
+Requires=hpldn-api.socket
+# postgresql.service is Debian's umbrella unit; the cluster is postgresql@18-main.
+After=hpldn-api.socket network-online.target postgresql.service postgresql@18-main.service
+Wants=network-online.target postgresql.service
+# Skips cleanly until deploy.sh has installed the application.
+ConditionPathExists=/opt/hpldn/venv/bin/gunicorn
+
+[Service]
+Type=simple
+User=hpldn
+Group=hpldn
+# Non-secret settings only: POSTGRES_API_* (the unix socket directory, the
+# role, sslmode=disable; no password: peer authentication),
+# RECAPTCHA_SITE_KEY (public) and HPLDN_PRICE_MODEL_FP. HPLDN_DIR_FP must NOT
+# be set here: it loads a develop.env.
+EnvironmentFile=/etc/hpldn/api.env
+# The secrets, as systemd credentials (bootstrap.sh writes them with
+# `systemd-creds encrypt --with-key=host`). systemd decrypts each into
+# /run/credentials/hpldn-api.service/<name> (0400, this unit only); the API
+# reads them there (common/secrets.py). Never in the environment, so never
+# in /proc/<pid>/environ or `systemctl show`.
+LoadCredentialEncrypted=api_key:/etc/credstore.encrypted/hpldn.api_key
+LoadCredentialEncrypted=pass_secret:/etc/credstore.encrypted/hpldn.pass_secret
+LoadCredentialEncrypted=recaptcha_secret_key:/etc/credstore.encrypted/hpldn.recaptcha_secret_key
+# Two workers, not vCPU x 2 + 1: each holds the ~1.9 GB CatBoost model and
+# the sales history, ~3.2 GB resident once warm.
+Environment=HPLDN_GUNICORN_WORKERS=2
+# Refuses HPLDN_ALLOW_UNSIGNED_MODEL=1: only a model bundle signed by a key in
+# models/trusted_keys/ is served (hpldn.backend.models.artifact).
+Environment=HPLDN_ENV=production
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONUNBUFFERED=1
+Environment=HOME=/run/hpldn
+Environment=MPLCONFIGDIR=/run/hpldn/matplotlib
+WorkingDirectory=/run/hpldn
+RuntimeDirectory=hpldn
+RuntimeDirectoryMode=0700
+# --timeout 360: a worker's first requests can wait on the warm-up, whose
+# local price index window query takes up to ~300 s on a cold cache.
+# No --access-logfile: the API logs each request itself to stdout (the
+# journal), with the time and the real client (api/access_log.py).
+# No --bind: gunicorn takes hpldn-api.socket from LISTEN_FDS.
+# HardenedUvicornWorker: no server/date headers, no proxy-header rewriting.
+# The request limits are gunicorn's defaults spelled out, the field count cut.
+ExecStart=/opt/hpldn/venv/bin/gunicorn hpldn.backend.api.main:app \
+    -k hpldn.backend.api.worker.HardenedUvicornWorker \
+    --workers ${HPLDN_GUNICORN_WORKERS} \
+    --timeout 360 \
+    --graceful-timeout 30 \
+    --limit-request-line 4094 \
+    --limit-request-fields 50 \
+    --limit-request-field_size 8190
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=45
+Restart=on-failure
+RestartSec=5
+
+# Hardening. The process needs to read /opt/hpldn (venv, models), talk to
+# PostgreSQL's socket, accept on its own socket and reach Google's
+# siteverify over HTTPS; nothing else.
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadOnlyPaths=/opt/hpldn
+InaccessiblePaths=-/opt/hpldn/serving -/etc/hpldn/tls -/etc/nginx/hpldn -/etc/credstore.encrypted -/var/lib/systemd/credential.secret
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectProc=invisible
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+# No SSRF pivot: the instance metadata service (169.254.169.254, which could
+# hand out instance details), the VCN, the tailnet (100.64.0.0/10) and every
+# other private range are unreachable from the API. Public 443 (Google's
+# siteverify) and the loopback (systemd-resolved's stub) stay open.
+IPAddressDeny=169.254.0.0/16 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 100.64.0.0/10 fd00::/8 fe80::/10
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+# A call outside the filter fails with EPERM instead of killing the worker.
+SystemCallErrorNumber=EPERM
+# No MemoryDenyWriteExecute: the aarch64 CatBoost wheel's _catboost.so (1.2.9
+# and 1.2.10) has text relocations, so loading it needs a writable code segment
+# and fails under MDWE with "cannot make segment writable for relocation:
+# Permission denied". Restore `MemoryDenyWriteExecute=yes` once
+# `readelf -d _catboost.so` no longer shows TEXTREL.
+RemoveIPC=yes
+PrivateUsers=yes
+DevicePolicy=closed
+CapabilityBoundingSet=
+AmbientCapabilities=
+UMask=0077
+# Target: `systemd-analyze security hpldn-api` exposure <= 2.0 (provision.py status).
+# The two workers use ~6.5 GB; PostgreSQL is sized for the rest of the 24 GB.
+MemoryMax=14G
+TasksMax=512
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,15 @@
+.notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-6);
+  border: 1px dashed var(--c-hairline-strong);
+  border-radius: var(--r-sm);
+  color: var(--c-ink-2);
+}
+
+.text {
+  font-size: var(--fs-body);
+  max-width: 60ch;
+}

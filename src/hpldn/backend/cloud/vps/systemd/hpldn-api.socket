@@ -1,0 +1,24 @@
+# The read API's only listener: a unix socket nginx's group can open.
+# Installed as /etc/systemd/system/hpldn-api.socket by bootstrap.sh.
+#
+# gunicorn takes it over through socket activation (LISTEN_FDS), so the API
+# has no TCP port at all: nothing on the host but nginx (group www-data) and
+# root can reach it, and no other process can bind in its place.
+[Unit]
+Description=HPLDN read API socket (gunicorn, socket-activated)
+
+[Socket]
+ListenStream=/run/hpldn-api/api.sock
+SocketUser=hpldn
+SocketGroup=www-data
+SocketMode=0660
+# systemd creates /run/hpldn-api as root:root, so nginx needs o+x to reach the
+# socket; the socket's own 0660 hpldn:www-data mode is what keeps others out.
+DirectoryMode=0755
+# The API's peer is the trusted proxy (api/ratelimit.py: a unix-socket peer
+# has no address), so only nginx may connect.
+Accept=no
+Backlog=2048
+
+[Install]
+WantedBy=sockets.target

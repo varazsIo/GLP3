@@ -1,0 +1,33 @@
+# Settings for `python -m hpldn.backend.cloud.oci` (provision.py). Copy to
+# ~/.config/hpldn/oci.toml (or point HPLDN_OCI_CONFIG at it). Nothing here is
+# secret: the passphrase, the Cloudflare token, the Tailscale OAuth client and
+# the reCAPTCHA keys come from the environment only (README.md).
+
+[oci]
+region = "uk-london-1"                       # the tenancy's home region
+tenancy_ocid = "ocid1.tenancy.oc1..aaaa..."
+admin_profile = "DEFAULT"                    # ~/.oci/config: a tenancy admin (state/ only)
+deployer_profile = "hpldn-deployer"          # ~/.oci/config: hpldn-deployer (main/)
+config_file = "~/.oci/config"
+deployer_public_key = "~/.oci/hpldn-deployer_public.pem"
+alert_email = "you@example.com"
+
+[site]
+domain = "hpldn.example.co.uk"
+zone_name = "example.co.uk"
+cloudflare_account_id = "0123456789abcdef0123456789abcdef"
+# model = "tmp/models/model_anchored_0031"   # the bundle `up`/`deploy` ship
+
+[ssh]
+public_key = "~/.ssh/id_ed25519.pub"
+
+[tofu]
+# true only once OCI's S3 API is confirmed to honour conditional writes
+# (README.md); provision.py always takes a local lock either way.
+use_lockfile = false
+# Break-glass only: open tcp/22 to admin_cidr in the NSG.
+bootstrap_ssh = false
+admin_cidr = "192.0.2.1/32"
+ocpus = 4
+memory_gb = 24
+boot_gb = 100

@@ -1,0 +1,57 @@
+/*
+ * A label over a detail line. The chip is its own size container, so the
+ * type scales down with a narrow chip to a readable floor and then wraps:
+ * the reasons behind an estimate are never cut off, and touch screens have
+ * no tooltip to recover them from.
+ */
+.chip {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+  padding: var(--sp-4);
+  border-radius: var(--r-md);
+  border: 1px solid var(--c-hairline);
+  background: var(--c-surface);
+  container-type: inline-size;
+  transition: transform var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease);
+}
+
+.chip:hover {
+  transform: translateY(-2px);
+  border-color: var(--c-hairline-strong);
+}
+
+.body {
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.label,
+.detail {
+  overflow-wrap: anywhere;
+}
+
+.label {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.detail {
+  margin-top: 2px;
+  font-size: var(--fs-small);
+  color: var(--c-ink-3);
+}
+
+@supports (font-size: 1cqi) {
+  .label {
+    font-size: clamp(0.9375rem, 4.6cqi, var(--fs-body));
+  }
+
+  .detail {
+    font-size: clamp(0.875rem, 3.4cqi, var(--fs-small));
+  }
+}

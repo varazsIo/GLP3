@@ -1,0 +1,30 @@
+.wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+}
+
+/* Same corner radius and weight as the form buttons. */
+.chip {
+  min-height: 36px;
+  padding: 0.375rem 0.875rem;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--c-hairline-strong);
+  background: var(--c-surface);
+  font-size: var(--fs-small);
+  font-weight: 500;
+  color: var(--c-ink-2);
+  transition: background var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+
+.chip:hover {
+  border-color: var(--c-ink-4);
+}
+
+.active {
+  background: var(--c-ink);
+  border-color: var(--c-ink);
+  color: var(--c-canvas);
+}

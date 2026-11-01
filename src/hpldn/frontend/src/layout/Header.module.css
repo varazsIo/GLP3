@@ -1,0 +1,128 @@
+.header {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 50;
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  color: #fff;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease);
+  border-bottom: 1px solid transparent;
+}
+
+/* The solid canvas first: a browser without color-mix() keeps it. */
+.scrolled {
+  background: var(--c-canvas);
+  background: color-mix(in srgb, var(--c-canvas) 88%, transparent);
+  backdrop-filter: saturate(180%) blur(14px);
+  color: var(--c-ink);
+  border-bottom-color: var(--c-hairline);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .scrolled {
+    background: var(--c-canvas);
+  }
+}
+
+.inner {
+  width: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding-inline: var(--gutter);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+}
+
+.wordmark {
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+}
+
+.nav {
+  margin-inline: auto;
+  display: flex;
+  gap: var(--sp-6);
+}
+
+.navLink {
+  font-size: var(--fs-small);
+  opacity: 0.8;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+
+.navLink:hover {
+  opacity: 1;
+}
+
+/* The section being read: full strength, underlined in the accent. */
+.navLink.active {
+  opacity: 1;
+  text-decoration: underline;
+  text-decoration-color: var(--c-accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+}
+
+.mobileLink.active {
+  color: var(--c-accent-ink);
+}
+
+.action {
+  flex: none;
+}
+
+.menuButton {
+  display: none;
+  margin-left: auto;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0.5rem;
+  font-size: var(--fs-small);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+
+/*
+ * Covers the whole screen below the header with a solid canvas, so no page
+ * content shows around the links, and scrolls inside itself when the screen
+ * is shorter than the menu. A height rather than a bottom inset: the header's
+ * backdrop filter makes it the containing block, and it is only header-high.
+ */
+.mobileNav {
+  position: fixed;
+  inset: var(--header-h) 0 auto 0;
+  height: calc(100vh - var(--header-h));
+  height: calc(100dvh - var(--header-h));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--c-canvas);
+  color: var(--c-ink);
+  border-bottom: 1px solid var(--c-hairline);
+  padding: var(--sp-4) var(--gutter) var(--sp-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.mobileLink {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding-block: var(--sp-2);
+  font-size: var(--fs-lead);
+}
+
+@media (max-width: 900px) {
+  .nav,
+  .action {
+    display: none;
+  }
+
+  .menuButton {
+    display: block;
+  }
+}

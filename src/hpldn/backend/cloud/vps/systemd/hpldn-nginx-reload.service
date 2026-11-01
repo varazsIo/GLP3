@@ -1,0 +1,8 @@
+# Started by hpldn-nginx-reload.path. A file that fails nginx -t is not
+# loaded: nginx keeps serving with the previous bans.
+[Unit]
+Description=Reload nginx for the HPLDN guard's includes
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'nginx -t -q && systemctl reload nginx'

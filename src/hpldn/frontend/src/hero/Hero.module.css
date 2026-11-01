@@ -1,0 +1,116 @@
+.hero {
+  position: relative;
+  /*
+   * The opening screen fills the first view on its own: the sections that
+   * follow stay below the fold until the page is scrolled.
+   */
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  padding-block: calc(var(--header-h) + var(--sp-8)) var(--sp-9);
+  background: #0b1a15;
+  isolation: isolate;
+  /* Above the sections that follow, so the address list and calendar can hang over them. */
+  z-index: 2;
+}
+
+/* Clipped here rather than on the hero, which must let its popups overflow. */
+.backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+}
+
+.sky {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 90% at 70% 10%, #1d4a3b 0%, #12261f 45%, #0b1113 100%);
+}
+
+.terraces {
+  position: absolute;
+  inset: auto 0 0 0;
+  width: 100%;
+  height: min(62vh, 620px);
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    to bottom,
+    rgba(8, 12, 11, 0.72) 0%,
+    rgba(8, 12, 11, 0.38) 32%,
+    rgba(8, 12, 11, 0.78) 72%,
+    rgba(8, 12, 11, 0.94) 100%
+  );
+}
+
+.inner {
+  position: relative;
+  width: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding-inline: var(--gutter);
+  color: #fff;
+  container-type: inline-size;
+}
+
+/*
+ * The claim sits on one line where it fits, the type shrinking with the
+ * container, and wraps once it reaches a readable floor. Browsers without
+ * container units keep the plain size and wrap.
+ */
+.headline {
+  font-size: var(--fs-display-xl);
+  line-height: var(--lh-display);
+  letter-spacing: -0.03em;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+}
+
+@supports (font-size: 1cqi) {
+  .headline {
+    font-size: clamp(1.75rem, 6.4cqi, var(--fs-display-xl));
+  }
+}
+
+
+.panel {
+  margin-top: var(--sp-8);
+}
+
+/* A text link on the dark hero, opening the details form beneath. */
+.detailsToggle {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: var(--sp-3);
+  color: rgba(255, 255, 255, 0.86);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-align: left;
+}
+
+.detailsToggle:hover {
+  color: #fff;
+}
+
+.detailsToggle:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.details {
+  margin-top: var(--sp-2);
+}
+
+@media (max-width: 900px) {
+  .hero {
+    padding-block: calc(var(--header-h) + var(--sp-8)) var(--sp-8);
+  }
+}

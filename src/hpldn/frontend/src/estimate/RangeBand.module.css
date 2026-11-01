@@ -1,0 +1,112 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.label {
+  align-self: center;
+  font-size: var(--fs-label);
+  font-weight: 500;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--c-ink-3);
+}
+
+/* The value's label above the band, and the band with its marker below. */
+.band {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.valueLabel {
+  position: relative;
+  align-self: flex-start;
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--c-accent-ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/*
+ * The range as a static interval, not a control: a flat bar with square end
+ * caps, so it never reads as a slider track.
+ */
+.track {
+  position: relative;
+  height: 12px;
+  margin-inline: 1px;
+  border-radius: 2px;
+  background: var(--c-accent-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c-accent) 35%, transparent);
+}
+
+/* The two ends: short upright caps a little taller than the bar. */
+.track::before,
+.track::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  background: var(--c-accent);
+  opacity: 0.55;
+}
+
+.track::before {
+  left: -1px;
+}
+
+.track::after {
+  right: -1px;
+}
+
+/* Where the value sits: an upright tick through the bar, topped by a diamond. */
+.marker {
+  position: absolute;
+  top: -7px;
+  bottom: -7px;
+  width: 2px;
+  background: var(--c-accent);
+  transform: translateX(-50%);
+}
+
+.marker::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  width: 9px;
+  height: 9px;
+  background: var(--c-accent);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.ends {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--fs-small);
+  color: var(--c-ink-2);
+}
+
+.end {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.endHigh {
+  text-align: right;
+}
+
+.endLabel {
+  font-size: var(--fs-label);
+  color: var(--c-ink-4);
+}
+
+.endValue {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}

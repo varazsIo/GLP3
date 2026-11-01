@@ -1,0 +1,15 @@
+# Applies the HPLDN inbound firewall at boot from the cached Cloudflare ranges
+# (hpldn-firewall apply). Installed by bootstrap.sh.
+[Unit]
+Description=HPLDN inbound firewall (Cloudflare-only 443, Tailscale admin)
+After=netfilter-persistent.service
+Before=network-online.target nginx.service
+Wants=network-pre.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/hpldn-firewall apply
+
+[Install]
+WantedBy=multi-user.target

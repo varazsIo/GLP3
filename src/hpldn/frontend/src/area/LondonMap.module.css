@@ -1,0 +1,184 @@
+.wrap {
+  position: relative;
+  container-type: inline-size;
+}
+
+/* A light basemap panel, the way a published area map is framed. */
+.frame {
+  position: relative;
+  background: var(--c-map-water);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-md);
+  padding: var(--sp-3);
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.district {
+  fill-rule: evenodd;
+  stroke: var(--c-map-stroke);
+  stroke-width: 0.75;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  cursor: pointer;
+  transition: filter var(--dur-fast) var(--ease);
+}
+
+.district:hover {
+  filter: brightness(1.08);
+}
+
+/*
+ * Chrome rings a clicked SVG shape with its focus outline, a box around the
+ * shape's bounds; the selected outline already marks it, so no box. The
+ * keyboard still sees focus as a heavier border.
+ */
+.district:focus {
+  outline: none;
+}
+
+.district:focus-visible {
+  outline: none;
+  stroke: var(--c-ink);
+  stroke-width: 2.5;
+}
+
+/* Not covered: no price, no pointer, no hover lift. */
+.uncovered {
+  cursor: default;
+}
+
+.uncovered:hover {
+  filter: none;
+}
+
+.selectedOutline {
+  fill: none;
+  fill-rule: evenodd;
+  stroke: var(--c-ink);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.river {
+  fill: none;
+  stroke: var(--c-river);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+/* Sits over the district it describes, kept inside the frame by script. */
+.tip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  max-width: min(16rem, calc(100% - 8px));
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--c-surface);
+  border: 1px solid var(--c-hairline-strong);
+  border-radius: var(--r-sm);
+  box-shadow: 0 8px 20px -12px rgba(17, 17, 19, 0.4);
+  overflow-wrap: anywhere;
+  pointer-events: none;
+}
+
+.tipName {
+  font-size: var(--fs-small);
+  font-weight: 600;
+}
+
+.tipValue {
+  font-size: var(--fs-label);
+  color: var(--c-ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.controls {
+  position: absolute;
+  right: var(--sp-3);
+  bottom: var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+/* Square white keys with a soft shadow; the zoom pair shares one card. */
+.recentre,
+.zoom {
+  background: var(--c-surface);
+  border-radius: var(--r-sm);
+  box-shadow: 0 1px 4px rgba(17, 17, 19, 0.3);
+}
+
+.zoom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 44px: the smallest comfortable touch target. */
+.control {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  color: var(--c-ink-2);
+  background: transparent;
+  border-radius: var(--r-sm);
+}
+
+.recentre {
+  background: var(--c-surface);
+}
+
+.control:hover:not(:disabled) {
+  color: var(--c-ink);
+  background: var(--c-canvas-sunk);
+}
+
+.control:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+}
+
+.control:disabled {
+  color: var(--c-ink-4);
+  cursor: not-allowed;
+}
+
+.zoomDivider {
+  display: block;
+  width: 28px;
+  height: 1px;
+  background: var(--c-hairline-strong);
+}
+
+/* The licence line: small print that wraps, never below 12px. */
+.caption {
+  margin-top: var(--sp-3);
+  font-size: var(--fs-label);
+  line-height: 1.4;
+  color: var(--c-ink-4);
+}
+
+@supports (font-size: 1cqi) {
+  .caption {
+    font-size: clamp(0.75rem, 1.45cqi, var(--fs-label));
+  }
+}

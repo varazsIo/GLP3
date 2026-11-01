@@ -1,0 +1,10 @@
+# Re-downloads Cloudflare's ranges and re-applies the firewall and nginx's
+# real-IP list (hpldn-firewall refresh). Started by the weekly timer.
+[Unit]
+Description=Refresh Cloudflare ranges for the HPLDN firewall and nginx
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/hpldn-firewall refresh

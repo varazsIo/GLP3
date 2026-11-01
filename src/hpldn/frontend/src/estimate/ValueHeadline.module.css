@@ -1,0 +1,27 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.label {
+  font-size: var(--fs-label);
+  font-weight: 500;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--c-ink-3);
+}
+
+.value {
+  white-space: nowrap;
+  font-size: var(--fs-display);
+  font-weight: var(--weight-head);
+  letter-spacing: -0.035em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.note {
+  font-size: var(--fs-small);
+  color: var(--c-ink-3);
+}

@@ -1,0 +1,284 @@
+.strip {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: var(--sp-9);
+  align-items: start;
+}
+
+.inputs {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-4);
+}
+
+.sources {
+  justify-self: start;
+}
+
+/* What the figures in the fields describe. */
+.source {
+  margin-top: calc(-1 * var(--sp-2));
+  font-size: var(--fs-small);
+  color: var(--c-ink-3);
+}
+
+/* A £ sign inside the field's left edge. */
+.money {
+  position: relative;
+  min-width: 0;
+}
+
+.currency {
+  position: absolute;
+  top: 50%;
+  left: 0.875rem;
+  transform: translateY(-50%);
+  color: var(--c-ink-3);
+  pointer-events: none;
+}
+
+.moneyInput {
+  padding-left: 1.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.depositRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+/* The value rides above the thumb; --at is the thumb's place, 0 to 1. */
+.depositTrack {
+  position: relative;
+  padding-top: 1.75rem;
+}
+
+.range {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  accent-color: var(--c-accent);
+}
+
+/*
+ * Over the thumb: a native thumb is about 16px wide, so its centre moves
+ * from 8px to (width - 8px). The label shifts by its own width in step, so
+ * it never runs past either end.
+ */
+.depositValue {
+  position: absolute;
+  top: 0;
+  left: calc(8px + (100% - 16px) * var(--at, 0));
+  transform: translateX(calc(-100% * var(--at, 0)));
+  padding: 2px var(--sp-2);
+  border-radius: var(--r-sm);
+  background: var(--c-accent-soft);
+  color: var(--c-accent-ink);
+  font-size: var(--fs-small);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.depositBounds {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--fs-label);
+  color: var(--c-ink-4);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The monthly position large, with the two yields smaller beside it. */
+.outputs {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: var(--sp-5) var(--sp-6);
+  padding: var(--sp-6);
+  background: var(--c-surface);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-lg);
+}
+
+.headline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  min-width: 0;
+  container-type: inline-size;
+}
+
+/*
+ * Figures stay on one line, sign and all: "-£318,373", never "-" above "£318,373".
+ * `--chars` (set from the figure's length) shrinks a long figure to fit its box.
+ */
+.headlineValue {
+  white-space: nowrap;
+  font-size: var(--fs-display);
+  font-weight: var(--weight-head);
+  letter-spacing: -0.035em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.figures {
+  display: grid;
+  gap: var(--sp-4);
+  padding-left: var(--sp-6);
+  border-left: 1px solid var(--c-hairline);
+}
+
+.figure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 0;
+  container-type: inline-size;
+}
+
+.figureLabel {
+  font-size: var(--fs-label);
+  font-weight: 500;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--c-ink-3);
+}
+
+.figureValue {
+  white-space: nowrap;
+  font-size: var(--fs-title);
+  font-weight: var(--weight-head);
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* A tabular digit is about 0.6em wide in Inter, so N characters need about 0.6N em. */
+@supports (width: 1cqi) {
+  .headlineValue {
+    font-size: min(var(--fs-display), calc(100cqi / (var(--chars, 8) * 0.62)));
+  }
+
+  .figureValue {
+    font-size: min(var(--fs-title), calc(100cqi / (var(--chars, 6) * 0.62)));
+  }
+}
+
+/* Without container units, clip rather than spill out of the card. */
+@supports not (width: 1cqi) {
+  .headlineValue,
+  .figureValue {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.helper {
+  font-size: var(--fs-small);
+  color: var(--c-ink-3);
+}
+
+.negative {
+  color: var(--c-clay-ink);
+}
+
+.included {
+  grid-column: 1 / -1;
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--c-hairline);
+  font-size: var(--fs-small);
+  color: var(--c-ink-3);
+}
+
+.included summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 44px;
+  cursor: pointer;
+  list-style: none;
+  font-weight: 500;
+  color: var(--c-ink-2);
+  text-underline-offset: 3px;
+}
+
+.included summary::-webkit-details-marker {
+  display: none;
+}
+
+/* A chevron that turns as the list opens, as on the area profile. */
+.included summary::after {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform var(--dur-fast) var(--ease);
+}
+
+.included[open] summary::after {
+  transform: translateY(1px) rotate(-135deg);
+}
+
+.included summary:hover {
+  color: var(--c-ink);
+  text-decoration: underline;
+}
+
+.included summary:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+}
+
+.includedList {
+  display: grid;
+  gap: var(--sp-1);
+  margin-block: var(--sp-2) var(--sp-3);
+}
+
+.link {
+  color: var(--c-accent-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.link:hover {
+  color: var(--c-accent);
+}
+
+@media (max-width: 1000px) {
+  .strip {
+    grid-template-columns: 1fr;
+    gap: var(--sp-7);
+  }
+}
+
+@media (max-width: 640px) {
+  .outputs {
+    grid-template-columns: 1fr;
+    padding: var(--sp-5);
+  }
+
+  .figures {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding-left: 0;
+    padding-top: var(--sp-4);
+    border-left: none;
+    border-top: 1px solid var(--c-hairline);
+  }
+}
+
+@media (max-width: 400px) {
+  .figures {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* A yield too high to be real: asks the landlord to check the figures. */
+.check {
+  margin: var(--sp-3) 0 0;
+  color: var(--c-clay-ink);
+  font-size: var(--fs-small);
+}

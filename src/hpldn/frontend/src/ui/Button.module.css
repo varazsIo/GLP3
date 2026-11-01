@@ -1,0 +1,120 @@
+.base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-body);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  transition: background var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease),
+    transform var(--dur-fast) var(--ease);
+}
+
+.pill {
+  border-radius: var(--r-pill);
+}
+
+/* Matches the radius of the form controls it sits beside. */
+.rect {
+  border-radius: var(--r-sm);
+}
+
+.base:active {
+  transform: translateY(1px);
+}
+
+.base:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.md {
+  padding: 0.8125rem 1.5rem;
+}
+
+.lg {
+  padding: 1rem 2rem;
+  font-size: 1.0625rem;
+}
+
+.sm {
+  padding: 0.5rem 1rem;
+  font-size: var(--fs-small);
+}
+
+/* Same vertical padding and border as an input, so the two line up. */
+.field {
+  padding: 0.75rem 1.5rem;
+  border-width: 1px;
+}
+
+.primary {
+  background: var(--c-accent);
+  color: #fff;
+  border: 1px solid var(--c-accent);
+}
+
+@media (prefers-color-scheme: dark) {
+  .primary {
+    color: #06231a;
+  }
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--c-accent-hover);
+  border-color: var(--c-accent-hover);
+}
+
+.secondary {
+  background: var(--c-surface);
+  color: var(--c-ink);
+  border: 1px solid var(--c-hairline-strong);
+}
+
+.secondary:hover:not(:disabled) {
+  border-color: var(--c-ink-3);
+}
+
+.ghost {
+  background: transparent;
+  color: inherit;
+  border: 1px solid currentColor;
+  opacity: 0.85;
+}
+
+.ghost:hover:not(:disabled) {
+  opacity: 1;
+}
+
+.full {
+  width: 100%;
+}
+
+/* Waiting on the action it started: a spinner before the label. */
+.loading {
+  cursor: progress;
+}
+
+.spinner {
+  flex: none;
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 700ms linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2s;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

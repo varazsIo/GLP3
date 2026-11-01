@@ -1,0 +1,106 @@
+.card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--sp-7);
+}
+
+.heading {
+  font-size: var(--fs-title);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--c-ink-3);
+}
+
+.heading:focus {
+  outline: none;
+}
+
+.top {
+  margin-top: var(--sp-5);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: var(--sp-8);
+  align-items: center;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+/* A placeholder block, with a soft light passing across it. */
+.bone {
+  display: block;
+  border-radius: var(--r-sm);
+  background: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in srgb, var(--c-surface) 70%, transparent) 50%,
+      transparent 100%
+    )
+    no-repeat,
+    var(--c-canvas-sunk);
+  background-size: 50% 100%, auto;
+  background-position: -100% 0, 0 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .bone {
+    animation: shimmer 1.4s var(--ease) infinite;
+  }
+}
+
+@keyframes shimmer {
+  to {
+    background-position: 200% 0, 0 0;
+  }
+}
+
+.label {
+  width: 40%;
+  height: 0.875rem;
+}
+
+.centred {
+  align-self: center;
+}
+
+.value {
+  width: 70%;
+  height: 3.5rem;
+}
+
+.band {
+  height: 10px;
+  border-radius: var(--r-pill);
+}
+
+.ends {
+  display: flex;
+  justify-content: space-between;
+}
+
+.end {
+  width: 22%;
+  height: 1.75rem;
+}
+
+.row {
+  margin-top: var(--sp-6);
+  height: 3.75rem;
+  border-radius: var(--r-md);
+}
+
+@media (max-width: 900px) {
+  .card {
+    padding: var(--sp-5);
+  }
+
+  .top {
+    grid-template-columns: 1fr;
+    gap: var(--sp-6);
+  }
+}

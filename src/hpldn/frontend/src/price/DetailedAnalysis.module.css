@@ -1,0 +1,137 @@
+.analysis {
+  margin-top: var(--sp-5);
+}
+
+.group + .group {
+  margin-top: var(--sp-6);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--c-hairline);
+}
+
+.groupHeading {
+  font-size: var(--fs-label);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-ink-3);
+}
+
+/* One figure per row: its label on the left, the value and what it rests on on the right. */
+.figures {
+  margin-top: var(--sp-3);
+}
+
+.figure {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, auto);
+  gap: var(--sp-1) var(--sp-5);
+  align-items: baseline;
+  padding-block: var(--sp-3);
+}
+
+.figure + .figure {
+  border-top: 1px solid var(--c-hairline);
+}
+
+.figure dt {
+  color: var(--c-ink-2);
+  overflow-wrap: anywhere;
+}
+
+.figure dd {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.value {
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.figure dd[aria-busy='true'] .value {
+  font-size: var(--fs-small);
+  font-weight: 400;
+  color: var(--c-ink-3);
+}
+
+.note {
+  margin-top: 2px;
+  font-size: var(--fs-label);
+  color: var(--c-ink-3);
+}
+
+/* The home's specs in one row, like the price card's. */
+.specs {
+  margin-top: var(--sp-3);
+  display: flex;
+  flex-wrap: wrap;
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+.spec {
+  flex: 1 1 8rem;
+  min-width: 0;
+  padding: var(--sp-3) var(--sp-4);
+  box-shadow: -1px 0 0 var(--c-hairline);
+}
+
+.spec dt {
+  font-size: var(--fs-label);
+  color: var(--c-ink-3);
+  white-space: nowrap;
+}
+
+.spec dd {
+  margin: 2px 0 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.footnote {
+  margin-top: var(--sp-3);
+  font-size: var(--fs-small);
+  line-height: 1.45;
+  color: var(--c-ink-3);
+}
+
+.error {
+  margin-top: var(--sp-4);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3);
+  color: var(--c-ink-2);
+}
+
+/* On a phone the value drops under its label, still easy to scan. */
+@media (max-width: 480px) {
+  .figure {
+    grid-template-columns: 1fr;
+  }
+
+  .figure dd {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .value {
+    white-space: normal;
+  }
+}
+
+@media (max-width: 400px) {
+  .spec {
+    flex-basis: 40%;
+    box-shadow: -1px 0 0 var(--c-hairline), 0 -1px 0 var(--c-hairline);
+  }
+}

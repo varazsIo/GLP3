@@ -1,0 +1,35 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# production
+/build
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# The repository root ignores every directory named "data" — that rule is meant
+# for downloaded datasets, not for src/data, which holds the shared types, the
+# areas provider and the borough geometry. Re-include it here so a fresh clone
+# still builds.
+!/src/data/
+
+# playwright
+/test-results
+/playwright-report
+/blob-report
+/playwright/.cache

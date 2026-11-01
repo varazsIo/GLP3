@@ -1,0 +1,73 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+/* One line whatever its length, so controls in a row line up. */
+.label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--fs-label);
+  font-weight: 500;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--c-ink-3);
+}
+
+.control {
+  width: 100%;
+  padding: 0.75rem 0.875rem;
+  background: var(--c-canvas);
+  border: 1px solid var(--c-hairline-strong);
+  border-radius: var(--r-sm);
+  color: var(--c-ink);
+  transition: border-color var(--dur-fast) var(--ease),
+    background var(--dur-fast) var(--ease);
+}
+
+.control::placeholder {
+  color: var(--c-ink-4);
+}
+
+.control:hover {
+  border-color: var(--c-ink-4);
+}
+
+.control:focus {
+  outline: none;
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 3px var(--c-accent-soft);
+}
+
+select.control {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 18px) 52%, calc(100% - 13px) 52%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 2.25rem;
+}
+
+.invalid,
+.invalid:hover {
+  border-color: var(--c-clay);
+}
+
+.invalid:focus {
+  border-color: var(--c-clay);
+  box-shadow: 0 0 0 3px var(--c-clay-soft);
+}
+
+.hint {
+  font-size: var(--fs-label);
+  color: var(--c-ink-4);
+}
+
+.error {
+  font-size: var(--fs-label);
+  color: var(--c-clay-ink);
+}

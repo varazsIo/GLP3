@@ -1,0 +1,65 @@
+.card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--sp-6);
+  color: var(--c-ink);
+}
+
+/* [Address][Sale date][Price this home]: controls share a baseline whatever the labels say. */
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2.4fr) minmax(0, 1fr) auto;
+  gap: var(--sp-4);
+  align-items: end;
+}
+
+.submitCell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+/*
+ * While any field shows a message under its control, every other cell keeps a
+ * line of the same height, so the bottom-aligned controls stay level.
+ */
+@media (min-width: 641px) {
+  .grid:has(> * > p) > :not(:has(> p))::after {
+    content: '';
+    display: block;
+    height: calc(var(--fs-label) * var(--lh-body));
+  }
+}
+
+.summary {
+  margin-top: var(--sp-3);
+  font-size: var(--fs-label);
+  color: var(--c-clay-ink);
+}
+
+.summary:empty {
+  margin-top: 0;
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  }
+
+  .submitCell {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .card {
+    padding: var(--sp-5);
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

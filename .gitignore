@@ -1,0 +1,62 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+.pytest_cache
+.coverage
+.coverage.*
+pytest.ini
+.DS_Store
+
+# Virtual environments
+.venv
+
+# Configuration files
+.vscode
+*.env
+# The frontend's production build settings: no secrets, and the build needs them.
+!src/hpldn/frontend/.env.production
+# The placeholder develop.env GitHub Actions copies in (no real value).
+!scripts/ci/develop.ci.env
+*.pem
+# Public keys model bundles are verified against (models.artifact); the
+# private signing key lives in ~/.config/hpldn, never in the repository.
+!src/hpldn/backend/models/trusted_keys/*.pem
+# Public keys serving dumps are verified against (export_serving_db --sign).
+!src/hpldn/backend/cloud/vps/trusted_keys/*.pem
+# Local configuration, except osm_addresses.ini: a migration input (0028),
+# tracked and pinned in src/hpldn/backend/migrations/inputs.yaml.
+configuration/*
+!configuration/osm_addresses.ini
+# OpenTofu (src/hpldn/backend/cloud/oci). The provider lock files ARE
+# tracked: they pin every provider's hashes for linux_amd64 and linux_arm64.
+# State is encrypted (pbkdf2 + aes_gcm) but never committed either way.
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.auto.tfvars
+!*.example.tfvars
+crash.log
+.uncommentrc.toml
+.playwright-mcp
+.claude/
+
+# Frontend (src/hpldn/frontend). Its Create React App .gitignore covers these
+# too; the root rules keep them ignored whichever file a clone has.
+node_modules/
+coverage/
+
+# Data and scratch (anchored: src/hpldn/frontend/src/data/ is source code)
+/data
+/tmp
+CLAUDE.md
+*.log
+
+# Rendered by `python -m hpldn.backend.db.render_vps_sql` from
+# src/hpldn/backend/db/sql/fragments (deploy.sh runs it).
+src/hpldn/backend/cloud/vps/postgres/api_role.sql
+src/hpldn/backend/cloud/vps/postgres/grants.sql

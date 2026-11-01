@@ -1,0 +1,206 @@
+[project]
+name = "hpldn"
+version = "0.1.0"
+description = "HPLDN is a python package to clean and analyse UK housing data"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "alembic==1.18.5",
+    "fastexcel==0.20.2",
+    "numpy==2.4.4",
+    "pandas==3.0.3",
+    "polars==1.40.1",
+    "polars-runtime-32==1.40.1",
+    # The sync driver every non-API path uses: the alembic chain, the
+    # pipeline steps, bare_metal and the EDA helpers all open
+    # postgresql:// (psycopg2) URLs through hpldn.backend.common.db.get_db_url.
+    # The binary wheel avoids the local libpq/pg_config build that the
+    # plain "psycopg2" sdist needs.
+    "psycopg2-binary==2.9.12",
+    "pyarrow==24.0.0",
+    "python-dateutil==2.9.0.post0",
+    "PyYAML==6.0.3",
+    "scikit-learn==1.9.0",
+    # hpldn.backend.scripts.local_index runs its small linear solves on one
+    # BLAS thread: two gunicorn workers' OpenBLAS pools spin-waiting on the
+    # same cores turned a 1 s warm-up into minutes. Also a scikit-learn dependency.
+    "threadpoolctl==3.6.0",
+    "catboost==1.2.10",
+    # hpldn.backend.models.artifact: Ed25519 signatures over model bundle
+    # manifests, checked by the API at warm-up and by the host before deploy.
+    "cryptography==50.0.1",
+    "matplotlib==3.11.1",
+    # hpldn.backend.scripts.data_visualization's SHAP feature-importance chart. Only
+    # its Random Forest path needs this package: CatBoost implements TreeSHAP
+    # natively (get_feature_importance(type="ShapValues")), scikit-learn's
+    # RandomForestRegressor does not, so shap's TreeExplainer supplies it.
+    # Imported lazily there, so a CatBoost-only run still works without it.
+    "shap==0.52.0",
+    "SQLAlchemy==2.0.49",
+    "typing_extensions==4.15.0",
+    "python-dotenv==1.2.2",
+    "gunicorn==26.2.0",
+    # hpldn.backend.guard: the API's reCAPTCHA siteverify call and the guard
+    # daemon's Cloudflare and crawler-range requests. Also what
+    # fastapi.testclient.TestClient runs on in the tests.
+    "httpx>=0.28",
+]
+
+# Install on a host with an NVIDIA GPU (pip install '.[gpu]').
+# hpldn.backend.common.hardware reads the GPUs through it and
+# hpldn.backend.common.accel runs the EDA reductions on the card; without it
+# — and on GPU-less or AMD hosts — the same code runs on numpy, so this is
+# optional by design. CUDA 13: Blackwell (sm_120, e.g. the RTX 50 series)
+# needs it, and CuPy 14 is the first release built for it.
+[project.optional-dependencies]
+gpu = ["cupy-cuda13x>=14"]
+
+# hpldn.backend.scripts.hpp_rf --device gpu keeps the whole pipeline on the card:
+# the query is loaded into a cuDF DataFrame instead of pandas, encoding runs
+# through cuML's OrdinalEncoder into cupy feature matrices, and RAPIDS
+# cuML's drop-in RandomForestRegressor trains/predicts on those device
+# arrays directly. cuDF/cuML ship from NVIDIA's own package index (pip
+# install --extra-index-url https://pypi.nvidia.com libcuml-cu13
+# cudf-cu13 — cu13 to match this host's CUDA 13.3 driver), not PyPI, so
+# they are documented here rather than pinned as an installable extra;
+# hpp_rf.py falls back to pandas/scikit-learn on CPU when they are absent,
+# the same pattern as hpldn.backend.common.accel falling back to numpy without cupy.
+
+# hpldn.backend.scripts.hpp_cb --device gpu needs none of the above: unlike cuML,
+# CatBoost's own PyPI wheel (the "catboost" core dependency above) bundles
+# its own CUDA GPU trainer, selected at runtime via task_type="GPU" rather
+# than a different installed package. The dataset stays in pandas on both
+# --device cpu and --device gpu; only the boosting itself moves to the card.
+# See hpp_cb.py's module docstring.
+
+# The serving host installs '.[api]' (cloud/vps/deploy.sh: uv sync --extra api).
+# hpldn.backend.api.config builds postgresql+psycopg:// URLs and deps.py passes
+# psycopg-3's `prepare_threshold`, so the async driver has to be declared
+# here: SQLAlchemy alone cannot open a connection, and the core
+# psycopg2-binary above is sync-only. The [binary] extra ships libpq in the
+# wheel, so the host needs no libpq development package.
+api = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.34",
+    "gunicorn>=23.0",
+    "psycopg[binary]>=3.2",
+]
+
+# Test-only tooling. Deliberately not in `dependencies`: a test runner has no
+# business on the production API host.
+# aiosqlite backs the in-memory async database tests/api/ runs its route
+# tests against (httpx, which TestClient needs, is a runtime dependency).
+dev = [
+    "pytest==9.0.3",
+    "pytest-env==1.6.0",
+    "pytest-xdist==3.8.0",
+    # Per-package coverage floors ([tool.coverage.*] below).
+    "pytest-cov>=6.0",
+    "aiosqlite>=0.20",
+    # Enforces the S101/B011 rules configured at the bottom of this file.
+    "ruff>=0.16",
+    # The shellcheck binary, as a wheel: tests/infra/test_shell_scripts.py
+    # lints cloud/**/*.sh with it, and the dev box has no sudo to apt-get it.
+    "shellcheck-py>=0.10",
+    # scripts/ci/run_all.sh's dependency audit.
+    "pip-audit>=2.7",
+]
+
+# Files that have to ship with the package, not just live in the source tree:
+#
+# * db/sql: the bootstrap SQL (db_init.sql and friends) and the fragments
+#   hpldn.backend.db.render_vps_sql builds the serving host's SQL from.
+# * migrations/inputs.yaml: the manifest of every file the chain reads. The
+#   files themselves (the Tier A ex-fixtures included) live under
+#   HPLDN_DATA_DIR, never in the wheel; `python -m
+#   hpldn.backend.migrations.inputs pull` restores Tier A from OCI.
+# * the alembic chain itself (alembic.ini, migrations/*.py,
+#   migrations/versions/*.py, script.py.mako) -- bare_metal drives
+#   `alembic upgrade` against the installed package. versions/ has no
+#   __init__.py (alembic loads it by path), so package discovery skips it
+#   and only this entry ships it.
+# Package discovery. Without this, setuptools' src-layout auto-discovery
+# walks every directory under src/ and, with the React client at
+# src/hpldn/frontend, sweeps node_modules into the wheel. Only the backend is
+# Python, so only the backend is packaged; the frontend is built by npm and
+# shipped as static assets, never by setuptools. The test suite stays out of
+# the wheel too: the serving host gets the wheel (cloud/vps/deploy.sh), and
+# tests are not shipped there. The editable dev install maps all of src/.
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["hpldn*"]
+exclude = ["hpldn.frontend*", "hpldn.backend.tests*"]
+# namespaces defaults to true under pyproject config, which would pick up
+# __init__-less directories such as node_modules/flatted/python.
+namespaces = false
+
+[tool.setuptools.package-data]
+"hpldn.backend.db" = ["sql/*.sql", "sql/*.sh", "sql/fragments/*.sql"]
+"hpldn.backend.migrations" = ["inputs.yaml", "script.py.mako", "versions/*.py"]
+"hpldn.backend" = ["alembic.ini"]
+# The public keys model bundles must be signed with (models.artifact).
+"hpldn.backend.models" = ["trusted_keys/*.pem"]
+
+
+##############################################
+# Tests
+##############################################
+#
+# Run from the repository root: `uv run pytest`. Paths the suite needs
+# (HPLDN_DIR_FP, HPLDN_LOG_FP, and HPLDN_CONFIG_FP on a clone without
+# configuration/staging.yaml) are derived from the checkout in
+# src/hpldn/backend/tests/conftest.py, since pytest-env cannot express a
+# path relative to the rootdir; the environment below only removes
+# variables that would point the suite somewhere else.
+#
+# A skip fails the run (see tests/conftest.py); the one exception is the
+# db-write policy: tests marked pg or db_write run only with
+# HPLDN_TEST_DB_WRITES=1, which scripts/ci/run_all.sh sets.
+[tool.pytest.ini_options]
+testpaths = ["src/hpldn/backend/tests"]
+addopts = "--strict-markers -ra -p no:cacheprovider"
+xfail_strict = true
+markers = [
+    "pg: uses the ephemeral PostgreSQL 18 cluster (tests/_pg.py); runs only with HPLDN_TEST_DB_WRITES=1",
+    "hpdbldn: reads the real, migrated hpdbldn database (read-only sessions)",
+    "db_write: creates, updates or deletes in a database, even inside a rolled-back transaction; runs only with HPLDN_TEST_DB_WRITES=1",
+    "gpu: needs a CUDA GPU and CuPy",
+    "nginx: needs the nginx cloud/local/fetch_nginx.sh unpacks (or one on PATH)",
+    "tofu: needs the OpenTofu CLI",
+    "tier_a: needs the Tier A migration inputs under HPLDN_DATA_DIR (restored from OCI by `python -m hpldn.backend.migrations.inputs pull`)",
+]
+env = [
+    # The gate is tested on: tests/api/conftest.py issues real passes.
+    "U:HPLDN_CAPTCHA_DISABLED",
+    # Every database a test touches comes from a fixture, never from here.
+    "U:HPLDN_DB_URL",
+    # The from-empty replay runs in scripts/ci/replay_chain.sh, not pytest.
+    "U:HPLDN_RUN_REBUILD_MIGRATIONS",
+]
+
+[tool.coverage.run]
+source = ["hpldn.backend"]
+omit = ["*/tests/*", "*/migrations/versions/*"]
+
+[tool.coverage.report]
+skip_empty = true
+show_missing = false
+
+##############################################
+# Lint
+##############################################
+#
+# Scoped deliberately narrowly: a gate for one defect class, not a repo-wide
+# style policy. `python -O` / PYTHONOPTIMIZE=1 removes assert statements
+# outright, so validation in package code must be an explicit raise;
+# S101/B011 enforce that.
+#
+# tests/ are exempt: an assert in a test is what assert is for.
+[tool.ruff]
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["S101", "B011"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/hpldn/backend/tests/**" = ["S101", "B011"]

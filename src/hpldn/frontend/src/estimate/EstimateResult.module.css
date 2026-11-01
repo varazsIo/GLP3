@@ -1,0 +1,126 @@
+.card,
+.notice {
+  background: var(--c-surface);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--sp-7);
+}
+
+.card {
+  animation: expand 420ms var(--ease) both;
+}
+
+@keyframes expand {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.heading {
+  font-size: var(--fs-title);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+/* Marks an estimate made for a whole district rather than one postcode. */
+.scope {
+  color: var(--c-ink-3);
+  font-weight: 400;
+}
+
+.heading:focus {
+  outline: none;
+}
+
+.heading:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 6px;
+}
+
+.errorText {
+  margin-block: var(--sp-4) var(--sp-5);
+  color: var(--c-ink-2);
+}
+
+.top {
+  margin-top: var(--sp-5);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: var(--sp-8);
+  align-items: center;
+}
+
+.subhead {
+  margin-top: var(--sp-7);
+  font-size: var(--fs-body);
+  font-weight: 600;
+}
+
+.drivers {
+  margin-top: var(--sp-3);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-4);
+}
+
+.comps .subhead {
+  margin-top: 0;
+}
+
+.comps {
+  margin-top: var(--sp-7);
+}
+
+.compsList {
+  margin-top: var(--sp-2);
+}
+
+.compsList > li:first-child {
+  border-top: none;
+}
+
+.more {
+  margin-top: var(--sp-3);
+  min-height: 44px;
+  font-size: var(--fs-small);
+  font-weight: 500;
+  color: var(--c-accent-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.compsEmpty {
+  margin-top: var(--sp-2);
+  font-size: var(--fs-small);
+  color: var(--c-ink-3);
+}
+
+@media (max-width: 900px) {
+  .top {
+    grid-template-columns: 1fr;
+    gap: var(--sp-6);
+    align-items: stretch;
+  }
+
+  .drivers {
+    grid-template-columns: 1fr;
+  }
+
+  .card,
+  .notice {
+    padding: var(--sp-5);
+  }
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+}

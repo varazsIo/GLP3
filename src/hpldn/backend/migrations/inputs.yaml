@@ -1,0 +1,396 @@
+# =====================================================================
+# Migration inputs manifest: every file the alembic chain reads.
+#
+# hpldn.backend.migrations.inputs is the only resolver. It turns `key` into
+# a path, checks the files are present before a revision runs, and pulls or
+# pushes Tier A to the OCI bucket:
+#
+#     python -m hpldn.backend.migrations.inputs check [--revision 0028] [--hash]
+#     python -m hpldn.backend.migrations.inputs paths
+#     python -m hpldn.backend.migrations.inputs pull|push
+#
+# Fields
+#   key          the name code passes to inputs.resolve (and the staging.yaml
+#                `data:` override key)
+#   path         relative to ${HPLDN_DATA_DIR} (default <repo>/data)
+#   repo         relative to the repository root, for files tracked in git
+#                (instead of path)
+#   kind         file, dir, or glob (path is a pattern; resolve returns the
+#                directory it matches in and check needs at least one match)
+#   contains     dir only: files that must be inside it
+#   glob         dir only: a pattern that must match at least one file inside it
+#   required_by  revisions that read it; "load-raw" is bare_metal --load-raw
+#                (StagingCopy, between 0001 and 0002)
+#   tier         A: irreproducible or hand-made, backed up to OCI Object
+#                Storage; B: re-fetchable from source_url
+#   sha256, size pinned content of a fixed file; check compares size, and
+#                check --hash compares sha256
+#   source_url, licence, fetch (the command that produces it)
+#
+# A staging.yaml `data: {<key>: <path>}` entry overrides `path` on one host.
+# =====================================================================
+inputs:
+  # --- load-raw (StagingCopy) -----------------------------------------
+  - key: ukhpucl_csv_fp
+    path: tranall_link_26122024.csv
+    kind: file
+    required_by: [load-raw]
+    tier: B
+    sha256: 08585816bd34f7c83769171843f0d4a5f80ffd02d5ca3d3ae2c4df401e472cdc
+    size: 23252014390
+    source_url: https://reshare.ukdataservice.ac.uk/857911/
+    licence: UK Data Service ReShare (see source_url)
+  - key: ukhpucl_csv_headers_fp
+    # StagingCopy rewrites this header row from the CSV's first line when it
+    # chunks, so it is not pinned.
+    path: sample_headers.csv
+    kind: file
+    required_by: [load-raw]
+    tier: B
+    source_url: https://reshare.ukdataservice.ac.uk/857911/
+    licence: UK Data Service ReShare (see source_url)
+    fetch: head -n 1 tranall_link_26122024.csv > sample_headers.csv
+
+  # --- 0003 seed registry -------------------------------------------------
+  # Load-order rule 1: both OS Open UPRN extracts load, in this order; the
+  # second is INSERT-ONLY. See seed_registry.
+  - key: osopenuprn_csv_fp
+    path: osopenuprn_202604.csv
+    kind: file
+    required_by: ["0003"]
+    tier: B
+    sha256: 71131e0f78b285b25a830a6d62e38c9beca41f7f1df6e9fc03fe85c71f035cda
+    size: 2264504497
+    source_url: https://www.ordnancesurvey.co.uk/products/os-open-uprn
+    licence: OGL-UK-3.0
+  - key: osopenuprn_refresh_csv_fp
+    path: osopenuprn_202608_csv/osopenuprn_202608.csv
+    kind: file
+    required_by: ["0003"]
+    tier: B
+    sha256: 0e310bcf840c8c3860450445c0ce374ca5b38cc45d3f80c09cbcab810537eae6
+    size: 2271141910
+    source_url: https://osdatahub.os.uk/data/downloads/open/OpenUPRN
+    licence: OGL-UK-3.0
+  # Load-order rule 2: two loads with different scopes read this directory
+  # (2024-2026 national, and 2008-2026 London-filtered).
+  - key: epc_domestic_dir
+    path: domestic_EPC
+    kind: dir
+    contains: [certificates-2008.csv, certificates-2009.csv, certificates-2010.csv,
+               certificates-2011.csv, certificates-2012.csv, certificates-2013.csv,
+               certificates-2014.csv, certificates-2015.csv, certificates-2016.csv,
+               certificates-2017.csv, certificates-2018.csv, certificates-2019.csv,
+               certificates-2020.csv, certificates-2021.csv, certificates-2022.csv,
+               certificates-2023.csv, certificates-2024.csv, certificates-2025.csv,
+               certificates-2026.csv]
+    required_by: ["0003"]
+    tier: B
+    source_url: https://get-energy-performance-data.communities.gov.uk/download/all?property_type=domestic
+    licence: OGL-UK-3.0 (address data excepted, see source_url)
+    fetch: unzip domestic-csv.zip -d domestic_EPC
+  - key: ppd_domestic_dir
+    path: .
+    kind: dir
+    contains: [pp-2024.csv, pp-2025.csv, pp-2026.csv]
+    required_by: ["0003"]
+    tier: B
+    source_url: https://price-paid-data.publicdata.landregistry.gov.uk/pp-2026.csv
+    licence: OGL-UK-3.0 (HM Land Registry Price Paid Data)
+  - key: codepoint_open_dir
+    path: codepoint_open/Data/CSV
+    kind: dir
+    glob: "*.csv"
+    required_by: ["0003"]
+    tier: B
+    source_url: https://osdatahub.os.uk/data/downloads/open/CodePointOpen
+    licence: OGL-UK-3.0
+  - key: ppd_uprn_linkage_tiera_csv_fp
+    # The 54,137 hand-produced Tier A links: the one irreproducible input.
+    path: migration_inputs/ppd_uprn_linkage_tierA.csv
+    kind: file
+    required_by: ["0003"]
+    tier: A
+    sha256: b03fd8be802e2e124a18a570ebc82af8473115eb3eab103a96046d917eadf5aa
+    size: 4405530
+    licence: derived from HM Land Registry Price Paid Data (OGL-UK-3.0) and OS Open UPRN (OGL-UK-3.0)
+  - key: lsoa_lookup_csv_fp
+    path: LSOA11_LSOA21_LAD22_EW_LU_v2_1754507175673141678.csv
+    kind: file
+    required_by: ["0003"]
+    tier: B
+    sha256: dc5a08f0a90b02d746ca18d77430dae71eebf87de19285c4dedf78bfe223365f
+    size: 2971970
+    source_url: https://geoportal.statistics.gov.uk/datasets/ons::lsoa-2011-to-lsoa-2021-to-local-authority-district-2022-best-fit-lookup-for-ew-v2/about
+    licence: OGL-UK-3.0
+  - key: msoa_lookup_csv_fp
+    path: MSOA_2011_to_2021_Best_Fit_Lookup_for_EW_V2.csv
+    kind: file
+    required_by: ["0003"]
+    tier: B
+    sha256: de5b8a6bf75e1d8061f30607fbf71d8ed052cf0f6f73dbe27b9e5149f28e1d3b
+    size: 581013
+    source_url: https://geoportal.statistics.gov.uk/datasets/ons::msoa-2011-to-msoa-2021-to-local-authority-district-2022-best-fit-lookup-for-ew-v2/about
+    licence: OGL-UK-3.0
+  - key: lsoa_msoa_lookup_csv_fp
+    path: LSOA11_MSOA11_EW_LU.csv
+    kind: file
+    required_by: ["0003"]
+    tier: B
+    sha256: 93f0fe81c9dcdf5a9bde7ed868c6ced4062a90576d5ac100a825eb359d58b116
+    size: 1841293
+    source_url: https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/OA11_LSOA11_MSOA11_LAD11_EW_LUv2_b3fe7c68f4b2420185eaff6284d4c125/FeatureServer/0/query
+    licence: OGL-UK-3.0
+    fetch: python -m hpldn.backend.scripts.fetch_lsoa_msoa_lookup
+  - key: lsoa_boundaries_csv_fp
+    path: LSOA_2011_BGC_WKT.csv
+    kind: file
+    required_by: ["0003"]
+    tier: B
+    sha256: 1c39d08c8a78e07051467cb5b81b7faa67dda518cf0a513e80e7f6af600b745a
+    size: 73213700
+    source_url: https://geoportal.statistics.gov.uk/datasets/ons::lower-layer-super-output-areas-december-2011-boundaries-ew-bgc-v3/about
+    licence: OGL-UK-3.0
+    fetch: python -m hpldn.backend.scripts.fetch_lsoa_boundaries
+  - key: iod_csv_dir
+    path: indices_of_deprivation
+    kind: dir
+    contains: [2010.csv, 2015.csv, 2019.csv, 2025.csv]
+    required_by: ["0003"]
+    tier: B
+    source_url: https://www.gov.uk/government/collections/english-indices-of-deprivation#archived-indices
+    licence: OGL-UK-3.0
+  - key: ptal_csv_fp
+    path: PTAL_2023_Grid_100mx100m_Data.csv
+    kind: file
+    required_by: ["0003"]
+    tier: B
+    sha256: fc6c52e8dc905f20871a563903754c6fb11417446113516c14e7954287907ad9
+    size: 25215509
+    source_url: https://gis-tfl.opendata.arcgis.com/datasets/ptal-2023-grid-100mx100m-data-1/about
+    licence: OGL-UK-3.0 (TfL)
+  - key: ptal_centroids_csv_fp
+    path: PTAL_2023_Grid_100mx100m_Centroids.csv
+    kind: file
+    required_by: ["0003"]
+    tier: B
+    sha256: d37fd6633247392b32e2d44ae4ce8333d59041d3b92f93069343ceb8a9af172b
+    size: 7182228
+    source_url: https://services1.arcgis.com/YswvgzOodUvqkoCN/ArcGIS/rest/services/PTAL_2023_Grid_100m_100m/FeatureServer/33/query
+    licence: OGL-UK-3.0 (TfL)
+    fetch: python -m hpldn.backend.scripts.fetch_ptal_centroids --geometry centroid
+  - key: ptal_polygons_csv_fp
+    path: PTAL_2023_Grid_100mx100m_Polygons.csv
+    kind: file
+    required_by: ["0003"]
+    tier: B
+    sha256: b7b97375c3b96528d65f3dd2c47a964c983b3d108d736450fa6abe0dba03a64f
+    size: 32218423
+    source_url: https://services1.arcgis.com/YswvgzOodUvqkoCN/ArcGIS/rest/services/PTAL_2023_Grid_100m_100m/FeatureServer/33/query
+    licence: OGL-UK-3.0 (TfL)
+    fetch: python -m hpldn.backend.scripts.fetch_ptal_centroids --geometry polygon
+  - key: open_rivers_gml_fp
+    path: open_rivers/data/OSOpenRivers.gml
+    kind: file
+    required_by: ["0003"]
+    tier: B
+    sha256: 07f702b075cc81399690de3971ddaa4c867b7a3936506a94441e13c86412a185
+    size: 353140102
+    source_url: https://api.os.uk/downloads/v1/products/OpenRivers/downloads?area=GB&format=GML&subformat=3&redirect
+    licence: OGL-UK-3.0
+    fetch: unzip oprvrs_gml3_gb.zip -d open_rivers
+  - key: open_green_spaces_gml_fp
+    path: open_green_spaces/OSOpenGreenspace_TQ.gml
+    kind: file
+    required_by: ["0003", "0013"]
+    tier: B
+    sha256: d322216349e582ece780429ce15278828c344f81774fec7d963d15b776be3ba8
+    size: 53852844
+    source_url: https://www.ordnancesurvey.co.uk/products/os-open-greenspace
+    licence: OGL-UK-3.0
+
+  # --- 0005 London staging spine ----------------------------------------
+  - key: inspire_polygons_dir
+    path: INSPIRE_polygons
+    kind: dir
+    required_by: ["0005"]
+    tier: B
+    source_url: https://use-land-property-data.service.gov.uk/datasets/inspire/download
+    licence: INSPIRE end user licence (HM Land Registry)
+
+  # --- 0009 reference tables --------------------------------------------
+  - key: boe_rate_csv_fp
+    path: Bank_Rate_history_BoE.csv
+    kind: file
+    required_by: ["0009"]
+    tier: B
+    sha256: bd3daf982a7329b8738ddfb33e45e59a1520488dc0884e673aea3680bbdf183d
+    size: 5046
+    source_url: https://www.bankofengland.co.uk/boeapps/database/Bank-Rate.asp
+    licence: Bank of England terms of use (see source_url)
+  - key: london_stations_csv_fp
+    path: London_stations_doogal.csv
+    kind: file
+    required_by: ["0009"]
+    tier: B
+    sha256: 18d60598f1b9301a4e93e7c3e320f1934e55c3cb27e1f05cdee41141f26679c4
+    size: 50425
+    source_url: https://www.doogal.co.uk/london_stations
+    licence: Doogal, derived from OGL-UK-3.0 sources
+  - key: ukhpi_csv_fp
+    path: ukhpi-london-from-1995-01-01-to-2026-08-01.csv
+    kind: file
+    required_by: ["0009"]
+    tier: B
+    sha256: e9483b11333a68d5f29a190ddf3e6f30fdc7c2fde2b012e371876ce885570710
+    size: 119483
+    source_url: https://landregistry.data.gov.uk/app/ukhpi/download/new?from=1995-01-01&to=2026-08-01&location=http%3A%2F%2Flandregistry.data.gov.uk%2Fid%2Fregion%2Flondon
+    licence: OGL-UK-3.0
+    fetch: python -m hpldn.backend.scripts.fetch_ukhpi --from 1995-01-01 --to 2026-08-01
+  - key: mortgage_rates_csv_fp
+    path: BoE_MR_2007-2026.csv
+    kind: file
+    required_by: ["0009"]
+    tier: B
+    sha256: 8ba9e0e5860dd4c91e2bb48d3b654164a9869be6182cde24fd89c4d335a896ae
+    size: 11717
+    source_url: https://www.bankofengland.co.uk/boeapps/database/fromshowcolumns.asp?Travel=NIxSUx&FromSeries=1&ToSeries=50&DAT=RNG&FD=1&FM=Jan&FY=2007&TD=3&TM=Sep&TY=2026&FNY=&CSVF=TT&html.x=74&html.y=24&C=IW&C=NB1&C=EOT&C=U1P&C=U1R&Filter=N#notes
+    licence: Bank of England terms of use (see source_url)
+
+  # --- 0023 / 0026 / 0032 ONS snapshots (Tier A) -------------------------
+  - key: ons_pipr_borough_rents_csv_fp
+    path: migration_inputs/ons_pipr_borough_rents.csv
+    kind: file
+    required_by: ["0023"]
+    tier: A
+    sha256: cb5463d5d954c861c25476df80c8596134233f7095e2e71063062fec1bdcd06e
+    size: 2637
+    source_url: https://www.ons.gov.uk/economy/inflationandpriceindices/datasets/priceindexofprivaterentsukmonthlypricestatistics
+    licence: OGL-UK-3.0
+  - key: ons_pipr_london_rents_csv_fp
+    path: migration_inputs/ons_pipr_london_rents.csv
+    kind: file
+    required_by: ["0026"]
+    tier: A
+    sha256: 5925d3d8625af349b3570f81159d2ea5fcf0e774b8fe895e7157bb7bf9b51ef2
+    size: 4755276
+    source_url: https://www.ons.gov.uk/economy/inflationandpriceindices/datasets/priceindexofprivaterentsukmonthlypricestatistics
+    licence: OGL-UK-3.0
+    fetch: python -m hpldn.backend.migrations.london_rents extract private_rents_monthly_prices.csv
+  - key: ons_cpih_annual_rate_csv_fp
+    path: migration_inputs/ons_cpih_annual_rate.csv
+    kind: file
+    required_by: ["0032"]
+    tier: A
+    sha256: 7fa08e58e20b9a43c1ca21148a08984049e1a1d4b613d0bb17e17618701dfc46
+    size: 7706
+    source_url: https://www.ons.gov.uk/generator?format=csv&uri=/economy/inflationandpriceindices/timeseries/l55o/mm23
+    licence: OGL-UK-3.0
+
+  # --- 0025 Price Paid history ------------------------------------------
+  - key: ppd_complete_csv_fp
+    path: pp-complete.csv
+    kind: file
+    required_by: ["0025"]
+    tier: B
+    sha256: cb3e4ffcc153c7906e8a3974cc231428fc1b28d69a71c6e950bad98384e9d8f5
+    size: 5510772256
+    source_url: http://prod.publicdata.landregistry.gov.uk.s3-website-eu-west-1.amazonaws.com/pp-complete.csv
+    licence: OGL-UK-3.0 (HM Land Registry Price Paid Data)
+
+  # --- 0027 / 0028 sale-to-UPRN linking -----------------------------------
+  - key: hmlr_uprn_lookup_dir
+    # One file a month, saved by hand; every match is loaded.
+    path: pp-uprn-lookup-*.csv
+    kind: glob
+    required_by: ["0027"]
+    tier: B
+    source_url: https://price-paid-data.publicdata.landregistry.gov.uk/pp-uprn-lookup-jul-2026.csv
+    licence: OGL-UK-3.0
+  - key: nsul_zip_fp
+    path: nsul/NSUL_E127_JUN_2026.zip
+    kind: file
+    required_by: ["0027"]
+    tier: B
+    sha256: 8e5cffe5f101b13edc3756c729586b65f7e32f8f0758621080aca8c7bf928138
+    size: 514786231
+    source_url: https://www.arcgis.com/sharing/rest/content/items/e5c9409787b344dea64488d70fb0990a/data
+    licence: OGL-UK-3.0
+    fetch: python -m hpldn.backend.scripts.fetch_linking_sources nsul
+  - key: lids_dir
+    path: lids
+    kind: dir
+    glob: "lids-*_csv_*.zip"
+    required_by: ["0028"]
+    tier: B
+    source_url: https://api.os.uk/downloads/v1/products/LIDS/downloads
+    licence: OGL-UK-3.0
+    fetch: python -m hpldn.backend.scripts.fetch_linking_sources lids
+  - key: open_roads_gpkg_fp
+    path: open_roads/Data/oproad_gb.gpkg
+    kind: file
+    required_by: ["0028"]
+    tier: B
+    sha256: c8e5265084ab341e39967be946b9bda8f7a4707db5c40e798a05045512b91178
+    size: 2144063488
+    source_url: https://api.os.uk/downloads/v1/products/OpenRoads/downloads?area=GB&format=GeoPackage&redirect
+    licence: OGL-UK-3.0
+    fetch: python -m hpldn.backend.scripts.fetch_linking_sources open-roads
+  - key: osm_pbf_fp
+    path: osm/greater-london-latest.osm.pbf
+    kind: file
+    required_by: ["0028"]
+    tier: B
+    sha256: 9325950d8307de3b1b66f6dfe7c2ddce6507b89fa2a4064b9a8683ae30f68a75
+    size: 129227906
+    source_url: https://download.geofabrik.de/europe/united-kingdom/england/greater-london-latest.osm.pbf
+    licence: ODbL-1.0 (c) OpenStreetMap contributors
+    fetch: python -m hpldn.backend.scripts.fetch_linking_sources osm
+  - key: osm_addresses_ini
+    # GDAL OSM driver configuration for 0028's ogr2ogr address load.
+    repo: configuration/osm_addresses.ini
+    kind: file
+    required_by: ["0028"]
+    tier: B
+    sha256: 5bab11e137d5a0562e6a1b34fc4d4756e1dd32c0cc47b1079c44a5974db121f2
+    size: 1124
+    licence: repository file
+  - key: planning_applications_csv_fp
+    path: planning_datahub_applications.csv
+    kind: file
+    required_by: ["0028"]
+    tier: B
+    sha256: 7409f9d3d934de18b584ddd2f3868a1f058607334414c577254d1e6eaca8fea7
+    size: 112381421
+    source_url: https://planningdata.london.gov.uk/api-guest/applications/_search
+    licence: OGL-UK-3.0 (GLA Planning London Datahub)
+    fetch: python -m hpldn.backend.scripts.fetch_linking_sources planning
+  - key: london_postcodes_csv_fp
+    path: All_London_Postcodes_Doogal.csv
+    kind: file
+    required_by: ["0028"]
+    tier: B
+    sha256: 3618bcd73b339231af6a11d84ec427d5fd04556adba505a6b8f58ddec75ce695
+    size: 271953848
+    source_url: https://www.doogal.co.uk/UKPostcodesCSV/?area=London
+    licence: Doogal, derived from ONSPD (OGL-UK-3.0)
+
+  # --- 0033 Ofsted ------------------------------------------------------
+  - key: ofsted_dir
+    path: ofsted
+    kind: dir
+    contains: [manifest.json]
+    required_by: ["0033"]
+    tier: B
+    source_url: https://www.gov.uk/government/statistical-data-sets/monthly-management-information-ofsteds-school-inspections-outcomes
+    licence: OGL-UK-3.0
+    fetch: python -m hpldn.backend.scripts.fetch_ofsted
+  - key: gias_dir
+    path: gias
+    kind: dir
+    contains: [gias_establishments.csv, gias_links.csv]
+    required_by: ["0033"]
+    tier: B
+    source_url: https://get-information-schools.service.gov.uk/Downloads
+    licence: OGL-UK-3.0
+    fetch: python -m hpldn.backend.scripts.fetch_ofsted --only gias_establishments gias_links

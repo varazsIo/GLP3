@@ -1,0 +1,227 @@
+.card,
+.notice {
+  background: var(--c-surface);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--sp-7);
+}
+
+/*
+ * The card is scrolled to as it mounts, while it still sits --enter-offset
+ * low for its entrance; the margin allows for that, so it settles clear of
+ * the header rather than under it.
+ */
+.card {
+  --enter-offset: 18px;
+  scroll-margin-top: var(--enter-offset);
+  animation: expand 420ms var(--ease) both;
+}
+
+/* A new answer is ringed in the accent for a moment, then settles. */
+@media (prefers-reduced-motion: no-preference) {
+  .card {
+    animation: expand 420ms var(--ease) both, highlight 1800ms var(--ease) 300ms;
+  }
+}
+
+@keyframes highlight {
+  0%,
+  35% {
+    box-shadow: 0 0 0 3px var(--c-accent), var(--shadow-card);
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent, var(--shadow-card);
+  }
+}
+
+@keyframes expand {
+  from {
+    opacity: 0;
+    transform: translateY(var(--enter-offset));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.heading {
+  font-size: var(--fs-title);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.heading:focus {
+  outline: none;
+}
+
+.heading:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 6px;
+}
+
+.errorText {
+  margin-block: var(--sp-4) var(--sp-5);
+  color: var(--c-ink-2);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+}
+
+.headline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+/* The chosen day, set apart so the date the price is for is never missed. */
+.saleDate {
+  display: inline-block;
+  padding: 1px var(--sp-2);
+  border-radius: var(--r-sm);
+  background: var(--c-accent-soft);
+  color: var(--c-accent-ink);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.top {
+  margin-top: var(--sp-5);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: var(--sp-8);
+  align-items: center;
+}
+
+/* The home's specs in one row, like a listing. */
+.specs {
+  margin-top: var(--sp-6);
+  display: flex;
+  flex-wrap: wrap;
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+.spec {
+  flex: 1 1 8rem;
+  min-width: 0;
+  padding: var(--sp-3) var(--sp-4);
+  box-shadow: -1px 0 0 var(--c-hairline);
+}
+
+.spec dt {
+  font-size: var(--fs-label);
+  color: var(--c-ink-3);
+  white-space: nowrap;
+}
+
+.spec dd {
+  margin: 2px 0 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.estimateNote {
+  margin-top: var(--sp-2);
+  font-size: var(--fs-small);
+  color: var(--c-ink-3);
+}
+
+/* The forecast disclosure, directly under the range band it qualifies. */
+.anchorNote {
+  margin-top: var(--sp-2);
+  font-size: var(--fs-small);
+  line-height: 1.45;
+  color: var(--c-ink-2);
+}
+
+.projectionNote {
+  margin-top: var(--sp-2);
+  font-size: var(--fs-small);
+  line-height: 1.45;
+  color: var(--c-ink-3);
+}
+
+.lastSale {
+  margin-top: var(--sp-5);
+  font-variant-numeric: tabular-nums;
+}
+
+.lastSaleLabel {
+  color: var(--c-ink-3);
+}
+
+.evidence {
+  margin-top: var(--sp-1);
+  font-size: var(--fs-small);
+  color: var(--c-ink-3);
+}
+
+/* The analysis face: a back button in the top left corner, beside its title. */
+.analysisBar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin: calc(-1 * var(--sp-3)) 0 var(--sp-4) calc(-1 * var(--sp-3));
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-pill);
+  background: var(--c-surface);
+  color: var(--c-ink);
+  cursor: pointer;
+  transition: background-color 150ms var(--ease), border-color 150ms var(--ease);
+}
+
+.back:hover {
+  background: var(--c-canvas-sunk);
+  border-color: var(--c-hairline-strong);
+}
+
+.back:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+}
+
+.analysisTitle {
+  font-size: var(--fs-label);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-accent-ink);
+}
+
+@media (max-width: 900px) {
+  .top {
+    grid-template-columns: 1fr;
+    gap: var(--sp-6);
+    align-items: stretch;
+  }
+
+  .card,
+  .notice {
+    padding: var(--sp-5);
+  }
+}
+
+@media (max-width: 400px) {
+  .spec {
+    flex-basis: 40%;
+    box-shadow: -1px 0 0 var(--c-hairline), 0 -1px 0 var(--c-hairline);
+  }
+}

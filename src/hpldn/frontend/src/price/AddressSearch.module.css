@@ -1,0 +1,10 @@
+.line {
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+.postcode {
+  font-size: var(--fs-small);
+  color: var(--c-ink-3);
+  font-variant-numeric: tabular-nums;
+}

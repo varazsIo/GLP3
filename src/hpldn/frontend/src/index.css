@@ -1,0 +1,31 @@
+@import './styles/tokens.css';
+@import './styles/reset.css';
+
+/*
+ * Page changes cross-fade instead of flashing. Same-document swaps use
+ * `document.startViewTransition` (lib/navigation.ts); `navigation: auto`
+ * covers a full load between pages, such as a link opened in the same tab
+ * before the bundle has started.
+ */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 180ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+}
+
+/*
+ * reCAPTCHA v3's floating badge. Hidden, as Google allows, because every form
+ * that sends a protected request shows its notice instead (ui/RecaptchaNotice).
+ */
+.grecaptcha-badge {
+  visibility: hidden;
+}

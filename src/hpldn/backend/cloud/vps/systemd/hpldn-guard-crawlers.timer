@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily refresh of the search crawler ranges for the HPLDN guard
+
+[Timer]
+OnCalendar=daily
+RandomizedDelaySec=2h
+Persistent=true
+
+[Install]
+WantedBy=timers.target

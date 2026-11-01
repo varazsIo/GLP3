@@ -1,0 +1,83 @@
+/* Shared type for the long-form pages (legal, AVM): readable measure, plain hierarchy. */
+.prose {
+  max-width: var(--reading-max);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.updated {
+  font-size: var(--fs-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--c-ink-4);
+}
+
+.callout {
+  padding: var(--sp-5);
+  background: var(--c-accent-soft);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-md);
+  scroll-margin-top: calc(var(--header-h) + var(--sp-5));
+}
+
+.calloutHead {
+  font-size: var(--fs-title);
+  line-height: var(--lh-title);
+}
+
+.calloutBody {
+  margin-top: var(--sp-3);
+  color: var(--c-ink-2);
+}
+
+.clause {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.clauseHead {
+  font-size: var(--fs-lead);
+}
+
+.body {
+  color: var(--c-ink-3);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  color: var(--c-ink-3);
+}
+
+.item {
+  display: flex;
+  gap: var(--sp-3);
+}
+
+.item::before {
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 6px;
+  margin-top: 0.6em;
+  border-radius: 50%;
+  background: var(--c-hairline-strong);
+}
+
+.itemLabel {
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+.link {
+  color: var(--c-accent-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.link:hover {
+  color: var(--c-accent);
+}

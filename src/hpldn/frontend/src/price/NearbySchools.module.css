@@ -1,0 +1,45 @@
+.list {
+  margin-top: var(--sp-3);
+  padding: 0;
+  list-style: none;
+}
+
+/* One school per row, as a sentence that wraps on a phone. */
+.school {
+  padding-block: var(--sp-3);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.school + .school {
+  border-top: 1px solid var(--c-hairline);
+}
+
+.phase {
+  color: var(--c-ink-3);
+}
+
+.name {
+  font-weight: 500;
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--c-hairline);
+  text-underline-offset: 3px;
+}
+
+.name:hover,
+.name:focus-visible {
+  text-decoration-color: currentColor;
+}
+
+.details {
+  color: var(--c-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.note {
+  margin-top: var(--sp-3);
+  font-size: var(--fs-small);
+  line-height: 1.45;
+  color: var(--c-ink-3);
+}

@@ -1,0 +1,13 @@
+# Reloads nginx when hpldn-guard rewrites one of its geo includes (a ban, a
+# lifted ban, new crawler ranges). The guard runs without root; this is the
+# only thing that reloads nginx for it. The guard writes at most every 10 s.
+[Unit]
+Description=Watch the HPLDN guard's nginx includes
+
+[Path]
+PathChanged=/var/lib/hpldn-guard/nginx/banned.conf
+PathChanged=/var/lib/hpldn-guard/nginx/crawlers.conf
+Unit=hpldn-nginx-reload.service
+
+[Install]
+WantedBy=multi-user.target

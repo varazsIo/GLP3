@@ -1,0 +1,24 @@
+.main {
+  display: block;
+}
+
+.main:focus {
+  outline: none;
+}
+
+.skipLink {
+  position: absolute;
+  left: var(--gutter);
+  top: -100px;
+  z-index: 100;
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--c-surface);
+  color: var(--c-ink);
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow-card);
+  transition: top var(--dur-fast) var(--ease);
+}
+
+.skipLink:focus {
+  top: var(--sp-3);
+}

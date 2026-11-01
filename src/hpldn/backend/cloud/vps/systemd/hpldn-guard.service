@@ -1,0 +1,79 @@
+# HPLDN guard daemon: reads nginx's guard log, bans abusive clients, and
+# mirrors the bans into nginx (banned.conf) and the Cloudflare IP list.
+# Installed as /etc/systemd/system/hpldn-guard.service by bootstrap.sh.
+[Unit]
+Description=HPLDN guard (bans abusive clients from nginx's guard log)
+After=network-online.target
+Wants=network-online.target
+# Skips cleanly until deploy.sh has installed the application.
+ConditionPathExists=/opt/hpldn/venv/bin/python
+
+[Service]
+Type=simple
+User=hpldn-guard
+Group=hpldn-guard
+# hpldn: to read the venv under /opt/hpldn (0750 root:hpldn). www-data:
+# nginx's workers send to the log socket, which the daemon gives to that group.
+SupplementaryGroups=hpldn www-data
+# The Cloudflare token (Account Rule Lists: Write), as a systemd credential
+# in /run/credentials/hpldn-guard.service/ (common/secrets.py), never in the
+# environment. bootstrap.sh --set-cloudflare-token writes it; until then it
+# holds an empty placeholder and the Cloudflare sink stays off. The API never
+# sees it, and this service never sees the API's.
+LoadCredentialEncrypted=cloudflare_api_token:/etc/credstore.encrypted/hpldn.cloudflare_api_token
+Environment=HPLDN_ENV=production
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/hpldn/venv/bin/python -m hpldn.backend.guard run
+# /var/lib/hpldn-guard: guard.db, crawlers.json and nginx/{banned,crawlers}.conf.
+StateDirectory=hpldn-guard
+StateDirectoryMode=0755
+# /run/hpldn-guard/log.sock, nginx's syslog target.
+RuntimeDirectory=hpldn-guard
+RuntimeDirectoryMode=0755
+WorkingDirectory=/var/lib/hpldn-guard
+Restart=always
+RestartSec=5
+
+# Hardening, as hpldn-api.service: read the venv, guard.yaml and Cloudflare's
+# ranges, write its own state, talk to Cloudflare, Google and Bing.
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadOnlyPaths=/opt/hpldn
+InaccessiblePaths=-/opt/hpldn/serving -/opt/hpldn/models -/etc/hpldn/tls -/etc/hpldn/api.env -/etc/nginx/hpldn -/etc/credstore.encrypted -/var/lib/systemd/credential.secret
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectProc=invisible
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+# As hpldn-api.service: no metadata service, VCN, tailnet or private range.
+# Its only outbound calls are Cloudflare's API and the crawlers' published
+# ranges, all public HTTPS.
+IPAddressDeny=169.254.0.0/16 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 100.64.0.0/10 fd00::/8 fe80::/10
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+# @privileged includes @chown, which _bind needs to give log.sock to www-data.
+SystemCallFilter=@chown
+SystemCallErrorNumber=EPERM
+MemoryDenyWriteExecute=yes
+RemoveIPC=yes
+DevicePolicy=closed
+CapabilityBoundingSet=
+AmbientCapabilities=
+UMask=0077
+MemoryMax=512M
+TasksMax=64
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,133 @@
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-8);
+}
+
+/*
+ * Each step hangs from a numbered disc on a rule that runs on to the next
+ * step, so the three read as a sequence.
+ */
+.steps > li {
+  position: relative;
+}
+
+.steps > li::before {
+  content: '';
+  position: absolute;
+  top: 22px;
+  left: 0;
+  right: calc(-1 * var(--sp-8));
+  height: 2px;
+  background: var(--c-hairline-strong);
+}
+
+.steps > li:last-child::before {
+  right: 0;
+}
+
+.step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.number {
+  display: block;
+  margin-bottom: var(--sp-2);
+}
+
+.disc {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--c-accent);
+  color: #fff;
+  font-size: 1.125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 0 0 6px var(--c-canvas-sunk);
+}
+
+@media (prefers-color-scheme: dark) {
+  .disc {
+    color: #06231a;
+  }
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.stepTitle {
+  font-size: 1.375rem;
+  letter-spacing: -0.025em;
+}
+
+.stepBody {
+  color: var(--c-ink-3);
+  text-wrap: pretty;
+}
+
+.more {
+  margin-top: var(--sp-7);
+}
+
+.moreLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 44px;
+  font-weight: 500;
+  color: var(--c-accent-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.moreLink:hover {
+  color: var(--c-accent);
+}
+
+@media (max-width: 900px) {
+  .steps {
+    grid-template-columns: 1fr;
+    gap: var(--sp-6);
+  }
+
+  /* Stacked: the rule runs down beside the steps instead of across. */
+  .steps > li::before {
+    top: 46px;
+    bottom: calc(-1 * var(--sp-6));
+    left: 22px;
+    right: auto;
+    width: 2px;
+    height: auto;
+  }
+
+  .steps > li:last-child::before {
+    display: none;
+  }
+
+  .step {
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1fr);
+    column-gap: var(--sp-5);
+    row-gap: var(--sp-2);
+  }
+
+  .number {
+    grid-row: 1 / span 2;
+    margin: 0;
+  }
+}

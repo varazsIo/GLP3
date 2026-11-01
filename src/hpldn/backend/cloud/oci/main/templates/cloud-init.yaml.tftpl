@@ -1,0 +1,85 @@
+#cloud-config
+# HPLDN serving host, first boot (cloud/oci/main/compute.tf).
+#
+# 1. sshd: keys only, ubuntu only, no forwarding (the same drop-in bootstrap.sh
+#    writes);
+# 2. Tailscale from its apt repository, the signing key pinned by fingerprint,
+#    then `tailscale up` with the single-use key read from a file (never argv)
+#    and shredded straight after;
+# 3. /etc/hpldn/provision.json (domain, hostname, time);
+# 4. the SSH host public keys and their fingerprints on the serial console,
+#    between HPLDN-HOST-KEYS markers: provision.py reads them from the
+#    console history and pins them in ~/.config/hpldn/known_hosts, so the
+#    first SSH connection already checks the host key.
+#
+# The tailnet key is the only secret here: reusable=false, preauthorized,
+# 1 h expiry, consumed now. Everything else (TLS, reCAPTCHA, Cloudflare) is
+# pushed later over SSH on stdin (bootstrap.sh's --set-* modes).
+
+write_files:
+  - path: /run/hpldn/ts.key
+    permissions: "0600"
+    owner: root:root
+    content: "${tailnet_key}"
+  - path: /etc/ssh/sshd_config.d/10-hpldn.conf
+    permissions: "0644"
+    owner: root:root
+    content: |
+      # HPLDN: keys only, no root, ubuntu only, no forwarding. Admin access is
+      # SSH over the tailnet; its host keys are pinned on the laptop.
+      PermitRootLogin no
+      PasswordAuthentication no
+      KbdInteractiveAuthentication no
+      AuthenticationMethods publickey
+      AllowUsers ubuntu
+      MaxAuthTries 3
+      AllowTcpForwarding no
+      AllowAgentForwarding no
+      AllowStreamLocalForwarding no
+      PermitTunnel no
+      X11Forwarding no
+
+runcmd:
+  - [bash, -c, "sshd -t && (systemctl reload ssh || systemctl reload sshd || true)"]
+  - - bash
+    - -c
+    - |
+      set -euo pipefail
+      . /etc/os-release
+      tmp="$(mktemp -d)"
+      curl -fsSL --proto '=https' --retry 5 "https://pkgs.tailscale.com/stable/ubuntu/$VERSION_CODENAME.noarmor.gpg" -o "$tmp/key.gpg"
+      fpr="$(gpg --show-keys --with-colons "$tmp/key.gpg" 2>/dev/null | awk -F: '/^fpr/ {print $10; exit}')"
+      if [ "$fpr" != "${tailscale_key_fpr}" ]; then
+        echo "HPLDN: Tailscale apt key fingerprint $fpr is not the pinned one; not installing" >/dev/console
+        shred -u /run/hpldn/ts.key
+        exit 1
+      fi
+      install -m 0644 "$tmp/key.gpg" /usr/share/keyrings/tailscale-archive-keyring.gpg
+      rm -rf "$tmp"
+      echo "deb [signed-by=/usr/share/keyrings/tailscale-archive-keyring.gpg] https://pkgs.tailscale.com/stable/ubuntu $VERSION_CODENAME main" >/etc/apt/sources.list.d/tailscale.list
+      apt-get update -q
+      DEBIAN_FRONTEND=noninteractive apt-get install -y -q tailscale
+      systemctl enable --now tailscaled
+      tailscale up --auth-key=file:/run/hpldn/ts.key --advertise-tags=tag:hpldn --hostname=${ts_hostname} || rc=$?
+      shred -u /run/hpldn/ts.key
+      exit "$${rc:-0}"
+  - - bash
+    - -c
+    - |
+      set -eu
+      install -d -m 0751 /etc/hpldn
+      printf '{"domain": "%s", "hostname": "%s", "provisioned_at": "%s"}\n' \
+        "${domain}" "${ts_hostname}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >/etc/hpldn/provision.json
+      chmod 0644 /etc/hpldn/provision.json
+  - - bash
+    - -c
+    - |
+      {
+        echo "HPLDN-HOST-KEYS-BEGIN"
+        for key in /etc/ssh/ssh_host_ed25519_key.pub /etc/ssh/ssh_host_ecdsa_key.pub; do
+          [ -f "$key" ] || continue
+          echo "HPLDN-HOST-KEY $(cut -d' ' -f1,2 "$key")"
+          echo "HPLDN-HOST-FP $(ssh-keygen -lf "$key" -E sha256 | cut -d' ' -f1,2,4)"
+        done
+        echo "HPLDN-HOST-KEYS-END"
+      } | tee /dev/console /dev/ttyAMA0 /dev/ttyS0 >/dev/null 2>&1 || true

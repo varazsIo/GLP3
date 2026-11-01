@@ -1,0 +1,109 @@
+/* The input, with the calendar button inside its right edge. */
+.wrap {
+  position: relative;
+  min-width: 0;
+}
+
+.input {
+  padding-right: 3rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.toggle {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-sm);
+  color: var(--c-ink-3);
+}
+
+.toggle:hover,
+.toggle[aria-expanded='true'] {
+  color: var(--c-accent);
+  background: var(--c-accent-soft);
+}
+
+.toggle:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 0;
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+.popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  padding: var(--sp-3);
+  background: var(--c-surface);
+  border: 1px solid var(--c-hairline-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-card);
+  color: var(--c-ink);
+}
+
+/* The calendar in the page's own colours and type. */
+.popover :global(.rdp-root) {
+  --rdp-accent-color: var(--c-accent);
+  --rdp-accent-background-color: var(--c-accent-soft);
+  --rdp-today-color: var(--c-ink);
+  --rdp-day-height: 40px;
+  --rdp-day-width: 40px;
+  --rdp-day_button-height: 38px;
+  --rdp-day_button-width: 38px;
+  --rdp-day_button-border-radius: var(--r-sm);
+  --rdp-disabled-opacity: 0.35;
+  --rdp-nav-height: 2.5rem;
+  font-size: var(--fs-small);
+  font-variant-numeric: tabular-nums;
+}
+
+.popover :global(.rdp-selected) :global(.rdp-day_button) {
+  background: var(--c-accent);
+  color: var(--c-surface);
+}
+
+.popover :global(.rdp-today:not(.rdp-selected)) :global(.rdp-day_button) {
+  font-weight: 700;
+}
+
+.popover :global(.rdp-day_button:focus-visible) {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 1px;
+}
+
+.popover :global(.rdp-dropdown_root) {
+  font-weight: 600;
+}
+
+.popover :global(.rdp-chevron) {
+  fill: var(--c-accent);
+}
+
+@media (max-width: 400px) {
+  .popover {
+    right: auto;
+    left: 0;
+    padding: var(--sp-2);
+  }
+
+  .popover :global(.rdp-root) {
+    --rdp-day-height: 36px;
+    --rdp-day-width: 36px;
+    --rdp-day_button-height: 34px;
+    --rdp-day_button-width: 34px;
+  }
+}
